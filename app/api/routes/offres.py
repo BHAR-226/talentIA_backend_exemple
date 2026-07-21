@@ -1,21 +1,27 @@
 """Routes API pour la gestion des Offres d'emploi (CDC §7)."""
 
 import uuid
-from typing import Sequence
+from collections.abc import Sequence
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.deps import require_roles
 from app.core.database import get_db
-from app.core.enums import StatutOffre
-from app.api.deps import get_current_user
+from app.core.enums import RoleUtilisateur, StatutOffre
 from app.models.campagne import Campagne
 from app.models.offre import Offre
 from app.models.utilisateur import Utilisateur
 from app.schemas.offre import OffreCreate, OffreResponse, OffreUpdate, ReceptionUpdate
 
 router = APIRouter(prefix="/offres", tags=["Offres"])
+
+# Dépendance réutilisée par tous les endpoints de ce fichier : seuls les
+# recruteurs et admin RH de l'entreprise peuvent gérer les offres (CDC §7).
+_require_recruteur_ou_admin = require_roles(
+    RoleUtilisateur.recruteur, RoleUtilisateur.admin_rh
+)
 
 
 async def _get_offre_for_user(
@@ -49,7 +55,7 @@ async def _get_offre_for_user(
 async def create_offre(
     offre_in: OffreCreate,
     db: AsyncSession = Depends(get_db),
-    current_user: Utilisateur = Depends(get_current_user),
+    current_user: Utilisateur = Depends(_require_recruteur_ou_admin),
 ) -> Offre:
     """Créer une nouvelle offre rattachée à une campagne de l'entreprise."""
     # 1. Vérifier que la campagne ciblée appartient bien à l'entreprise de l'utilisateur
@@ -82,12 +88,15 @@ async def create_offre(
 
 @router.get("", response_model=list[OffreResponse])
 async def list_offres(
-    statut: StatutOffre | None = Query(None, description="Filtrer par statut (brouillon, publiee...)"),
+    statut: StatutOffre | None = Query(
+        None,
+        description="Filtrer par statut (brouillon, publiee...)",
+    ),
     campagne_id: uuid.UUID | None = Query(None, description="Filtrer par campagne"),
     db: AsyncSession = Depends(get_db),
-    current_user: Utilisateur = Depends(get_current_user),
+    current_user: Utilisateur = Depends(_require_recruteur_ou_admin),
 ) -> Sequence[Offre]:
-    """Lister toutes les offres de l'entreprise (avec filtres optionnels par statut ou campagne)."""
+    """Lister les offres de l'entreprise (filtres optionnels par statut ou campagne)."""
     if not current_user.entreprise_id:
         return []
 
@@ -111,7 +120,7 @@ async def list_offres(
 async def get_offre(
     offre_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
-    current_user: Utilisateur = Depends(get_current_user),
+    current_user: Utilisateur = Depends(_require_recruteur_ou_admin),
 ) -> Offre:
     """Récupérer le détail d'une offre."""
     return await _get_offre_for_user(offre_id, current_user, db)
@@ -122,7 +131,7 @@ async def update_offre(
     offre_id: uuid.UUID,
     offre_in: OffreUpdate,
     db: AsyncSession = Depends(get_db),
-    current_user: Utilisateur = Depends(get_current_user),
+    current_user: Utilisateur = Depends(_require_recruteur_ou_admin),
 ) -> Offre:
     """Mettre à jour les données d'une offre."""
     offre = await _get_offre_for_user(offre_id, current_user, db)
@@ -142,7 +151,7 @@ async def toggle_reception_candidatures(
     offre_id: uuid.UUID,
     reception_in: ReceptionUpdate,
     db: AsyncSession = Depends(get_db),
-    current_user: Utilisateur = Depends(get_current_user),
+    current_user: Utilisateur = Depends(_require_recruteur_ou_admin),
 ) -> Offre:
     """Arrêter ou réouvrir la réception des candidatures pour une offre.
     C'est la route appelée par le bouton « Arrêter » du Frontend.
@@ -162,7 +171,7 @@ async def toggle_reception_candidatures(
 async def delete_offre(
     offre_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
-    current_user: Utilisateur = Depends(get_current_user),
+    current_user: Utilisateur = Depends(_require_recruteur_ou_admin),
 ) -> None:
     """Supprimer une offre d'emploi."""
     offre = await _get_offre_for_user(offre_id, current_user, db)
