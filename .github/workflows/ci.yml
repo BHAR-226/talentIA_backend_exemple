@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Installer Poetry
+        run: pipx install poetry
+
+      - name: Installer les dépendances
+        run: poetry install --no-interaction --no-root
+
+      - name: Lint (ruff)
+        run: poetry run ruff check app
+
+      - name: Vérifier que l'application s'importe (mappers SQLAlchemy inclus)
+        run: >
+          poetry run python -c "from app.main import app;
+          from sqlalchemy.orm import configure_mappers; configure_mappers();
+          print('import OK -', len(app.routes), 'routes')"

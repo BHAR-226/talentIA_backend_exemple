@@ -1,0 +1,51 @@
+[tool.poetry]
+name = "talentia-backend"
+version = "0.1.0"
+description = "API TalentIA ATS — SaaS de recrutement assisté par IA (multi-tenant, AI-first)."
+authors = ["Équipe TalentIA — DigiScia"]
+readme = "README.md"
+packages = [{ include = "app" }]
+
+[tool.poetry.dependencies]
+python = "^3.12"
+fastapi = "^0.115"
+uvicorn = { extras = ["standard"], version = "^0.34" }
+sqlalchemy = "^2.0"
+alembic = "^1.14"
+psycopg = { extras = ["binary"], version = "^3.2" }
+pydantic = { extras = ["email"], version = "^2.10" }
+pydantic-settings = "^2.7"
+pyjwt = "^2.10"
+bcrypt = "^4.2"
+python-multipart = "^0.0.20"
+
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.9"
+pytest = "^8.3"
+httpx = "^0.28"
+
+[build-system]
+requires = ["poetry-core>=2.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+# `= Depends(...)` / `= Query(...)` en argument par défaut est le pattern
+# idiomatique de FastAPI : on l'autorise (sinon B008 les signale à tort).
+[tool.ruff.lint.flake8-bugbear]
+extend-immutable-calls = [
+  "fastapi.Depends",
+  "fastapi.Query",
+  "fastapi.Path",
+  "fastapi.Body",
+  "fastapi.Header",
+  "fastapi.Cookie",
+  "fastapi.File",
+  "fastapi.Form",
+  "fastapi.Security",
+]
