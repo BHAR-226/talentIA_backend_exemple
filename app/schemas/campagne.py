@@ -13,7 +13,9 @@ class CampagneBase(BaseModel):
     intitule: str = Field(..., max_length=255, description="Intitulé de la campagne")
     departement: str | None = Field(None, max_length=255)
     date_limite: datetime | None = None
-    nombre_postes: int = Field(default=1, ge=1, description="Nombre de postes à pourvoir (minimum 1)")
+    nombre_postes: int = Field(
+        default=1, ge=1, description="Nombre de postes à pourvoir (minimum 1)"
+    )
 
     # Critères de cadrage de la campagne
     localisation: str | None = Field(None, max_length=255)

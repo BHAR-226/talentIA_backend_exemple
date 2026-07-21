@@ -6,16 +6,17 @@ ce qui permet l'autogénération des migrations (`alembic revision --autogenerat
 
 import os
 from logging.config import fileConfig
+
 from alembic import context
-from sqlalchemy import engine_from_config, pool
 from dotenv import load_dotenv
+from sqlalchemy import engine_from_config, pool
 
 # Charge explicitement les variables définies dans le fichier .env
 load_dotenv()
 
-import app.models  # noqa: F401  (enregistre tous les modèles sur Base.metadata)
-from app.core.config import settings
-from app.core.database import Base
+import app.models  # noqa: F401,E402  (enregistre tous les modèles sur Base.metadata)
+from app.core.config import settings  # noqa: E402
+from app.core.database import Base  # noqa: E402
 
 config = context.config
 if config.config_file_name is not None:

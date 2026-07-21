@@ -13,12 +13,18 @@ class OffreBase(BaseModel):
     """Champs de base partagés par la création et l'affichage d'une offre."""
 
     titre: str = Field(..., max_length=255, description="Titre de l'offre d'emploi")
-    description: str | None = Field(None, description="Description détaillée du poste et des missions")
-    type_contrat: TypeContrat | None = Field(None, description="Type de contrat (CDI, CDD, Stage...)")
+    description: str | None = Field(
+        None, description="Description détaillée du poste et des missions"
+    )
+    type_contrat: TypeContrat | None = Field(
+        None, description="Type de contrat (CDI, CDD, Stage...)"
+    )
     localisation: str | None = Field(None, max_length=255, description="Lieu de travail")
     salaire_min: int | None = Field(None, ge=0, description="Salaire minimum")
     salaire_max: int | None = Field(None, ge=0, description="Salaire maximum")
-    reception_ouverte: bool = Field(True, description="Indique si l'offre accepte encore des candidatures")
+    reception_ouverte: bool = Field(
+        True, description="Indique si l'offre accepte encore des candidatures"
+    )
     champs_personnalises_def: list[dict[str, Any]] = Field(
         default_factory=list,
         description="Questions/champs personnalisés configurés pour le formulaire de candidature",
@@ -51,7 +57,9 @@ class OffreUpdate(BaseModel):
 class ReceptionUpdate(BaseModel):
     """Schéma spécifique pour l'action du bouton 'Arrêter/Rouvrir' les candidatures."""
 
-    reception_ouverte: bool = Field(..., description="True pour ouvrir, False pour arrêter la réception")
+    reception_ouverte: bool = Field(
+        ..., description="True pour ouvrir, False pour arrêter la réception"
+    )
 
 
 class OffreResponse(OffreBase):
