@@ -17,11 +17,11 @@ pydantic = { extras = ["email"], version = "^2.10" }
 pydantic-settings = "^2.7"
 pyjwt = "^2.10"
 bcrypt = "^4.2"
-python-multipart = "^0.0.20"
+python-multipart = ">=0.0.20,<0.0.32"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.9"
-pytest = "^8.3"
+pytest = ">=8.3,<10.0"
 httpx = "^0.28"
 
 [build-system]
