@@ -4,20 +4,31 @@ Importer `app.models` enregistre tous les modèles auprès de `Base.metadata`,
 ce qui permet l'autogénération des migrations (`alembic revision --autogenerate`).
 """
 
+import os
 from logging.config import fileConfig
 
 from alembic import context
+from dotenv import load_dotenv
 from sqlalchemy import engine_from_config, pool
 
-import app.models  # noqa: F401  (enregistre tous les modèles sur Base.metadata)
-from app.core.config import settings
-from app.core.database import Base
+# Charge explicitement les variables définies dans le fichier .env
+load_dotenv()
+
+import app.models  # noqa: F401,E402  (enregistre tous les modèles sur Base.metadata)
+from app.core.config import settings  # noqa: E402
+from app.core.database import Base  # noqa: E402
 
 config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-config.set_main_option("sqlalchemy.url", settings.database_url)
+# Priorité à l'URL du .env si elle existe, sinon on utilise la config de l'app
+db_url = os.getenv("DATABASE_URL") or settings.database_url
+
+# Affichage de l'URL dans la console pour valider la connexion lors de l'exécution
+print(f"--> [Alembic] Connexion avec l'URL : {db_url}")
+
+config.set_main_option("sqlalchemy.url", db_url)
 target_metadata = Base.metadata
 
 
