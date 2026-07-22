@@ -17,7 +17,6 @@ from pydantic import BaseModel, ConfigDict
 
 from app.core.enums import StatutCandidature
 
-
 # ==========================================================
 # Création d'une candidature
 # ==========================================================

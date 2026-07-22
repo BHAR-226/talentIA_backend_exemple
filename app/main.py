@@ -15,10 +15,10 @@ from app.api.routes import (
     admin,
     auth,
     campagnes,
+    candidature,
     entreprises,
     health,
     offres,
-    candidature,
 )
 from app.core.config import settings
 from app.core.responses import (

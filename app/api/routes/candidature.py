@@ -4,7 +4,6 @@ Routes API pour la gestion des candidatures.
 
 import json
 import uuid
-
 from pathlib import Path
 
 from fastapi import (
@@ -16,7 +15,6 @@ from fastapi import (
     UploadFile,
     status,
 )
-
 from sqlalchemy.orm import Session
 
 from app.api.deps import (
@@ -24,21 +22,16 @@ from app.api.deps import (
     get_current_identity,
     require_roles,
 )
-
 from app.core.database import get_db
 from app.core.enums import RoleUtilisateur
 from app.core.responses import APIResponse, success
-
 from app.models.offre import Offre
 from app.models.utilisateur import Utilisateur
-
 from app.schemas.candidature import (
     CandidatureResponse,
     CandidatureUpdateStatut,
 )
-
 from app.services import candidature_service
-
 
 router = APIRouter(
     prefix="/candidatures",

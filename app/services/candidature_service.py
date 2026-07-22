@@ -9,15 +9,14 @@ Toute la logique métier est centralisée ici :
 - validation des champs personnalisés
 """
 
-from uuid import UUID
 from typing import Any
+from uuid import UUID
 
 from sqlalchemy.orm import Session
 
 from app.core.enums import StatutCandidature
 from app.models.candidature import Candidature
 from app.models.offre import Offre
-
 
 # ==========================================================
 # Lecture
