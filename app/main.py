@@ -18,6 +18,7 @@ from app.api.routes import (
     entreprises,
     health,
     offres,
+    candidature,
 )
 from app.core.config import settings
 from app.core.responses import (
@@ -53,6 +54,8 @@ app.include_router(admin.router)
 app.include_router(campagnes.router)
 app.include_router(offres.router)
 
+# --- Routes Métier Candidatures BAMBARA ---
+app.include_router(candidature.router)
 
 @app.get("/", tags=["root"])
 def root() -> dict:
