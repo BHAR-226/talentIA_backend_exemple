@@ -15,6 +15,7 @@ from app.api.routes import (
     admin,
     auth,
     campagnes,
+    candidature,
     entreprises,
     health,
     offres,
@@ -53,6 +54,8 @@ app.include_router(admin.router)
 app.include_router(campagnes.router)
 app.include_router(offres.router)
 
+# --- Routes Métier Candidatures BAMBARA ---
+app.include_router(candidature.router)
 
 @app.get("/", tags=["root"])
 def root() -> dict:
