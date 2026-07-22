@@ -150,7 +150,7 @@ def create_candidature(
         raise HTTPException(
             status_code=400,
             detail="Format champs_personnalises invalide.",
-        )
+        ) from None
 
 
     try:
@@ -169,7 +169,7 @@ def create_candidature(
         raise HTTPException(
             status_code=422,
             detail=str(error),
-        )
+        ) from None
 
 
     return success(
