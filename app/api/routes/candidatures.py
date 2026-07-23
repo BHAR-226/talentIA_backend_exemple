@@ -20,11 +20,12 @@ from fastapi import (
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_candidat, get_current_user
-from app.core.config import settings
 from app.core.database import get_db
-from app.core.enums import RoleUtilisateur, StatutCandidature
+from app.core.enums import RoleUtilisateur
+from app.core.plans import get_plan_limits
 from app.core.responses import success
 from app.core.validators import validate_custom_fields, validate_file_upload
+from app.models.abonnement import Abonnement
 from app.models.campagne import Campagne
 from app.models.candidature import Candidature
 from app.models.candidat import Candidat
@@ -32,7 +33,6 @@ from app.models.offre import Offre
 from app.models.utilisateur import Utilisateur
 from app.schemas.candidature import (
     CandidatureBulkUpdate,
-    CandidatureCreate,
     CandidatureResponse,
     CandidatureUpdate,
     CandidatureUpdateStatut,
@@ -142,6 +142,31 @@ def postuler(
             status.HTTP_409_CONFLICT,
             "Vous avez déjà postulé à cette offre."
         )
+
+    # Vérifier le quota de candidatures par offre du plan d'abonnement
+    campagne = db.get(Campagne, offre.campagne_id)
+    if campagne is not None:
+        abonnement = (
+            db.query(Abonnement)
+            .filter(Abonnement.entreprise_id == campagne.entreprise_id)
+            .first()
+        )
+        if abonnement is not None:
+            limite = get_plan_limits(abonnement.plan).get("candidatures_par_offre")
+            if limite is not None:
+                nb_candidatures = (
+                    db.query(Candidature)
+                    .filter(
+                        Candidature.offre_id == offre_id,
+                        Candidature.deleted_at.is_(None),
+                    )
+                    .count()
+                )
+                if nb_candidatures >= limite:
+                    raise HTTPException(
+                        status.HTTP_403_FORBIDDEN,
+                        "Cette offre a atteint son nombre maximum de candidatures."
+                    )
     
     # Valider les champs personnalisés
     try:
@@ -156,14 +181,14 @@ def postuler(
         try:
             validate_custom_fields(champs, offre.champs_personnalises_def)
         except ValueError as e:
-            raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, str(e))
+            raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, str(e)) from e
     
     # Valider et sauvegarder le CV
     try:
         content = cv.file.read()
         file_info = validate_file_upload(cv.filename or "unknown", content)
     except ValueError as e:
-        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, str(e))
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, str(e)) from e
     
     # Sauvegarder le fichier
     filename = f"{uuid.uuid4()}{file_info['extension']}"
