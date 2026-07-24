@@ -78,6 +78,7 @@ def _get_offre_or_404(db: Session, offre_id: uuid.UUID, entreprise_id: uuid.UUID
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Offre introuvable ou accès non autorisé."
         )
+
     return offre
 
 
