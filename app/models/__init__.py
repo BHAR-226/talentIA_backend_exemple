@@ -1,7 +1,9 @@
 """Modèles SQLAlchemy. Importés ici pour que `Base.metadata` les connaisse
-tous (indispensable à l'autogénération Alembic)."""
+tous (indispensable à l'autogénération Alembic).
+"""
 
 from app.models.abonnement import Abonnement
+from app.models.audit import AuditLog
 from app.models.campagne import Campagne
 from app.models.candidat import Candidat
 from app.models.candidature import Candidature
@@ -17,4 +19,5 @@ __all__ = [
     "Offre",
     "Candidat",
     "Candidature",
+    "AuditLog",
 ]

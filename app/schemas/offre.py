@@ -4,7 +4,7 @@ import uuid
 from datetime import datetime
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from app.core.enums import StatutOffre, TypeContrat
 
@@ -12,23 +12,88 @@ from app.core.enums import StatutOffre, TypeContrat
 class OffreBase(BaseModel):
     """Champs de base partagés par la création et l'affichage d'une offre."""
 
-    titre: str = Field(..., max_length=255, description="Titre de l'offre d'emploi")
+    titre: str = Field(
+        min_length=1,
+        max_length=255,
+        description="Titre de l'offre d'emploi"
+    )
     description: str | None = Field(
-        None, description="Description détaillée du poste et des missions"
+        default=None,
+        description="Description détaillée du poste et des missions"
     )
     type_contrat: TypeContrat | None = Field(
-        None, description="Type de contrat (CDI, CDD, Stage...)"
+        default=None,
+        description="Type de contrat (CDI, CDD, Stage...)"
     )
-    localisation: str | None = Field(None, max_length=255, description="Lieu de travail")
-    salaire_min: int | None = Field(None, ge=0, description="Salaire minimum")
-    salaire_max: int | None = Field(None, ge=0, description="Salaire maximum")
+    localisation: str | None = Field(
+        default=None,
+        max_length=255,
+        description="Lieu de travail"
+    )
+    salaire_min: int | None = Field(
+        default=None,
+        ge=0,
+        description="Salaire minimum proposé"
+    )
+    salaire_max: int | None = Field(
+        default=None,
+        ge=0,
+        description="Salaire maximum proposé"
+    )
+
+    # Gestion des candidatures
     reception_ouverte: bool = Field(
-        True, description="Indique si l'offre accepte encore des candidatures"
+        default=True,
+        description="Indique si l'offre accepte encore des candidatures"
     )
+
+    # Champs personnalisables
     champs_personnalises_def: list[dict[str, Any]] = Field(
         default_factory=list,
-        description="Questions/champs personnalisés configurés pour le formulaire de candidature",
+        description="Questions/champs personnalisés pour le formulaire de candidature"
     )
+
+    # Champs additionnels
+    missions: list[str] = Field(
+        default_factory=list,
+        description="Liste des missions principales"
+    )
+    soft_skills: list[str] = Field(
+        default_factory=list,
+        description="Compétences comportementales requises"
+    )
+    avantages: list[str] = Field(
+        default_factory=list,
+        description="Avantages proposés"
+    )
+    tele_travail: str | None = Field(
+        default=None,
+        max_length=50,
+        description="Télétravail : full, partial, no"
+    )
+    visible: bool = Field(
+        default=True,
+        description="Indique si l'offre est visible publiquement"
+    )
+
+    @field_validator('salaire_min', 'salaire_max')
+    @classmethod
+    def validate_salaire(cls, v: int | None) -> int | None:
+        """Valide que le salaire est positif."""
+        if v is not None and v < 0:
+            raise ValueError('Le salaire doit être positif')
+        return v
+
+    @field_validator('salaire_min', 'salaire_max')
+    @classmethod
+    def validate_salaire_range(cls, v: int | None, info) -> int | None:
+        """Valide que le salaire min est inférieur au salaire max."""
+        if 'salaire_min' in info.data and 'salaire_max' in info.data:
+            min_val = info.data.get('salaire_min')
+            max_val = info.data.get('salaire_max')
+            if min_val is not None and max_val is not None and min_val > max_val:
+                raise ValueError('Le salaire minimum doit être inférieur au maximum')
+        return v
 
 
 class OffreCreate(OffreBase):
@@ -36,41 +101,131 @@ class OffreCreate(OffreBase):
     L'offre est liée à une campagne spécifique.
     """
 
-    campagne_id: uuid.UUID
-    statut: StatutOffre = Field(default=StatutOffre.brouillon)
+    campagne_id: uuid.UUID = Field(
+        description="ID de la campagne associée"
+    )
+    statut: StatutOffre = Field(
+        default=StatutOffre.brouillon,
+        description="Statut initial de l'offre"
+    )
 
 
 class OffreUpdate(BaseModel):
     """Schéma pour la mise à jour partielle d'une offre (PUT/PATCH)."""
 
-    titre: str | None = Field(None, max_length=255)
-    description: str | None = None
-    type_contrat: TypeContrat | None = None
-    localisation: str | None = Field(None, max_length=255)
-    salaire_min: int | None = Field(None, ge=0)
-    salaire_max: int | None = Field(None, ge=0)
-    statut: StatutOffre | None = None
-    reception_ouverte: bool | None = None
-    champs_personnalises_def: list[dict[str, Any]] | None = None
+    titre: str | None = Field(
+        default=None,
+        min_length=1,
+        max_length=255
+    )
+    description: str | None = Field(
+        default=None
+    )
+    type_contrat: TypeContrat | None = Field(
+        default=None
+    )
+    localisation: str | None = Field(
+        default=None,
+        max_length=255
+    )
+    salaire_min: int | None = Field(
+        default=None,
+        ge=0
+    )
+    salaire_max: int | None = Field(
+        default=None,
+        ge=0
+    )
+    statut: StatutOffre | None = Field(
+        default=None
+    )
+    reception_ouverte: bool | None = Field(
+        default=None
+    )
+    champs_personnalises_def: list[dict[str, Any]] | None = Field(
+        default=None
+    )
+    missions: list[str] | None = Field(
+        default=None
+    )
+    soft_skills: list[str] | None = Field(
+        default=None
+    )
+    avantages: list[str] | None = Field(
+        default=None
+    )
+    tele_travail: str | None = Field(
+        default=None,
+        max_length=50
+    )
+    visible: bool | None = Field(
+        default=None
+    )
+
+    @field_validator('salaire_min', 'salaire_max')
+    @classmethod
+    def validate_salaire(cls, v: int | None) -> int | None:
+        """Valide que le salaire est positif."""
+        if v is not None and v < 0:
+            raise ValueError('Le salaire doit être positif')
+        return v
+
+    @field_validator('salaire_min', 'salaire_max')
+    @classmethod
+    def validate_salaire_range(cls, v: int | None, info) -> int | None:
+        """Valide que le salaire min est inférieur au salaire max."""
+        if 'salaire_min' in info.data and 'salaire_max' in info.data:
+            min_val = info.data.get('salaire_min')
+            max_val = info.data.get('salaire_max')
+            if min_val is not None and max_val is not None and min_val > max_val:
+                raise ValueError('Le salaire minimum doit être inférieur au maximum')
+        return v
 
 
-class ReceptionUpdate(BaseModel):
+class OffreReceptionUpdate(BaseModel):
     """Schéma spécifique pour l'action du bouton 'Arrêter/Rouvrir' les candidatures."""
 
     reception_ouverte: bool = Field(
-        ..., description="True pour ouvrir, False pour arrêter la réception"
+        description="True pour ouvrir, False pour arrêter la réception"
     )
 
 
 class OffreResponse(OffreBase):
     """Schéma renvoyé au Frontend lors de la lecture d'une offre (GET)."""
 
-    id: uuid.UUID
-    campagne_id: uuid.UUID
-    createur_id: uuid.UUID | None = None
-    statut: StatutOffre
-    date_publication: datetime | None = None
-    created_at: datetime
-    updated_at: datetime
-
     model_config = ConfigDict(from_attributes=True)
+
+    # Identifiants
+    id: uuid.UUID = Field(description="ID unique de l'offre")
+    campagne_id: uuid.UUID = Field(description="ID de la campagne associée")
+    createur_id: uuid.UUID | None = Field(
+        default=None,
+        description="ID de l'utilisateur qui a créé l'offre"
+    )
+
+    # Statut et dates
+    statut: StatutOffre = Field(description="Statut actuel de l'offre")
+    date_publication: datetime | None = Field(
+        default=None,
+        description="Date de publication de l'offre"
+    )
+    created_at: datetime = Field(description="Date de création")
+    updated_at: datetime = Field(description="Date de dernière modification")
+
+    # Métriques calculées
+    nombre_candidatures: int = Field(
+        default=0,
+        description="Nombre total de candidatures reçues"
+    )
+    est_publiee: bool = Field(
+        default=False,
+        description="Indique si l'offre est publiée"
+    )
+    est_archivee: bool = Field(
+        default=False,
+        description="Indique si l'offre est archivée"
+    )
+    est_pourvue: bool = Field(
+        default=False,
+        description="Indique si le poste est pourvu"
+    )
