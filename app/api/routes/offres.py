@@ -20,7 +20,6 @@ from app.schemas.offre import (
     ReceptionUpdate,
 )
 
-
 router = APIRouter(
     prefix="/offres",
     tags=["Offres"],

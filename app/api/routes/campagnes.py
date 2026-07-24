@@ -14,7 +14,6 @@ from app.models.campagne import Campagne
 from app.models.utilisateur import Utilisateur
 from app.schemas.campagne import CampagneCreate, CampagneResponse, CampagneUpdate
 
-
 router = APIRouter(prefix="/campagnes", tags=["Campagnes"])
 
 
