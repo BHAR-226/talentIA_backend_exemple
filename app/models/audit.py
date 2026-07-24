@@ -21,7 +21,7 @@ class AuditLog(UUIDMixin, TimestampMixin, Base):
     Enregistre toutes les actions CRUD effectuées sur les données
     sensibles de l'application avec les métadonnées associées.
     """
-    
+
     __tablename__ = "audit_logs"
     __table_args__ = (
         Index("ix_audit_logs_table_name", "table_name"),
@@ -34,13 +34,13 @@ class AuditLog(UUIDMixin, TimestampMixin, Base):
     # ==========================================================
     # Informations sur l'entité modifiée
     # ==========================================================
-    
+
     table_name: Mapped[str] = mapped_column(
         String(100),
         nullable=False,
         comment="Nom de la table modifiée"
     )
-    
+
     record_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         nullable=False,
@@ -50,7 +50,7 @@ class AuditLog(UUIDMixin, TimestampMixin, Base):
     # ==========================================================
     # Action réalisée
     # ==========================================================
-    
+
     action: Mapped[str] = mapped_column(
         String(20),
         nullable=False,
@@ -60,14 +60,14 @@ class AuditLog(UUIDMixin, TimestampMixin, Base):
     # ==========================================================
     # Utilisateur
     # ==========================================================
-    
-    user_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+
+    user_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True),
         nullable=True,
         comment="ID de l'utilisateur ayant réalisé l'action"
     )
-    
-    user_email: Mapped[Optional[str]] = mapped_column(
+
+    user_email: Mapped[str | None] = mapped_column(
         String(255),
         nullable=True,
         comment="Email de l'utilisateur (redondant pour recherche)"
@@ -76,7 +76,7 @@ class AuditLog(UUIDMixin, TimestampMixin, Base):
     # ==========================================================
     # Modifications
     # ==========================================================
-    
+
     changes: Mapped[dict[str, Any]] = mapped_column(
         JSONB,
         nullable=False,
@@ -87,20 +87,20 @@ class AuditLog(UUIDMixin, TimestampMixin, Base):
     # ==========================================================
     # Métadonnées de la requête
     # ==========================================================
-    
-    ip_address: Mapped[Optional[str]] = mapped_column(
+
+    ip_address: Mapped[str | None] = mapped_column(
         String(45),
         nullable=True,
         comment="Adresse IP de l'utilisateur"
     )
-    
-    user_agent: Mapped[Optional[str]] = mapped_column(
+
+    user_agent: Mapped[str | None] = mapped_column(
         String(255),
         nullable=True,
         comment="User-Agent du navigateur/client"
     )
-    
-    request_id: Mapped[Optional[str]] = mapped_column(
+
+    request_id: Mapped[str | None] = mapped_column(
         String(36),
         nullable=True,
         comment="ID unique de la requête (pour traçabilité)"
@@ -109,7 +109,7 @@ class AuditLog(UUIDMixin, TimestampMixin, Base):
     # ==========================================================
     # Date (héritée de TimestampMixin)
     # ==========================================================
-    
+
     # created_at est hérité de TimestampMixin
 
     # ==========================================================
@@ -122,15 +122,14 @@ class AuditLog(UUIDMixin, TimestampMixin, Base):
         table_name: str,
         record_id: uuid.UUID,
         action: str,
-        user_id: Optional[uuid.UUID] = None,
-        user_email: Optional[str] = None,
-        changes: Optional[dict] = None,
-        ip_address: Optional[str] = None,
-        user_agent: Optional[str] = None,
-        request_id: Optional[str] = None,
+        user_id: uuid.UUID | None = None,
+        user_email: str | None = None,
+        changes: dict | None = None,
+        ip_address: str | None = None,
+        user_agent: str | None = None,
+        request_id: str | None = None,
     ) -> "AuditLog":
-        """
-        Crée une nouvelle entrée de journal d'audit.
+        """Crée une nouvelle entrée de journal d'audit.
 
         Args:
             table_name: Nom de la table modifiée
@@ -309,11 +308,10 @@ def log_action(
     record_id: uuid.UUID,
     action: str,
     user: Optional["Utilisateur"] = None,
-    changes: Optional[dict] = None,
-    request: Optional[Request] = None,
+    changes: dict | None = None,
+    request: Request | None = None,
 ) -> AuditLog:
-    """
-    Fonction utilitaire pour logger une action avec les métadonnées de la requête.
+    """Fonction utilitaire pour logger une action avec les métadonnées de la requête.
 
     Args:
         db: Session SQLAlchemy

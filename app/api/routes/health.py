@@ -1,5 +1,6 @@
 """Sonde de santé (liveness/readiness) — ne dépend pas de la base pour rester
-verte même si la DB est momentanément indisponible."""
+verte même si la DB est momentanément indisponible.
+"""
 
 from fastapi import APIRouter
 

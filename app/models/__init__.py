@@ -1,5 +1,6 @@
 """Modèles SQLAlchemy. Importés ici pour que `Base.metadata` les connaisse
-tous (indispensable à l'autogénération Alembic)."""
+tous (indispensable à l'autogénération Alembic).
+"""
 
 from app.models.abonnement import Abonnement
 from app.models.audit import AuditLog

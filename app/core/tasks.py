@@ -5,11 +5,11 @@ HTTP (ex: envoi d'email de vérification).
 """
 
 import logging
-from typing import Any, Dict
+from typing import Any
 
 from celery import Celery
 from celery.result import AsyncResult
-from celery.signals import task_failure, task_success, task_retry
+from celery.signals import task_failure, task_retry, task_success
 
 from app.core.config import settings
 from app.core.emailing import (
@@ -36,23 +36,23 @@ celery_app.conf.update(
     task_serializer="json",
     result_serializer="json",
     accept_content=["json"],
-    
+
     # Résultats
     task_ignore_result=False,
     result_expires=3600,  # 1 heure
-    
+
     # Timeouts
     task_time_limit=300,  # 5 minutes
     task_soft_time_limit=240,  # 4 minutes
-    
+
     # Retry
     task_acks_late=True,
     task_reject_on_worker_lost=True,
-    
+
     # Concurrency
     worker_prefetch_multiplier=1,
     worker_max_tasks_per_child=100,
-    
+
     # Broker
     broker_connection_retry_on_startup=True,
     broker_connection_retry=True,
@@ -92,8 +92,7 @@ def task_retry_handler(sender=None, reason=None, **kwargs):
     default_retry_delay=60,
 )
 def send_verification_email_async(self, email: str, nom: str, token: str) -> bool:
-    """
-    Envoi d'email de vérification en arrière-plan via worker Celery.
+    """Envoi d'email de vérification en arrière-plan via worker Celery.
     
     Args:
         email: Destinataire
@@ -121,8 +120,7 @@ def send_verification_email_async(self, email: str, nom: str, token: str) -> boo
     default_retry_delay=60,
 )
 def send_welcome_email_async(self, email: str, nom: str) -> bool:
-    """
-    Envoi d'email de bienvenue en arrière-plan.
+    """Envoi d'email de bienvenue en arrière-plan.
     
     Args:
         email: Destinataire
@@ -148,8 +146,7 @@ def send_welcome_email_async(self, email: str, nom: str) -> bool:
     default_retry_delay=60,
 )
 def send_reset_password_email_async(self, email: str, nom: str, token: str) -> bool:
-    """
-    Envoi d'email de réinitialisation de mot de passe.
+    """Envoi d'email de réinitialisation de mot de passe.
     
     Args:
         email: Destinataire
@@ -176,8 +173,7 @@ def send_reset_password_email_async(self, email: str, nom: str, token: str) -> b
     default_retry_delay=60,
 )
 def send_offre_email_async(self, email: str, nom: str, offre_titre: str) -> bool:
-    """
-    Envoi d'email de notification d'offre.
+    """Envoi d'email de notification d'offre.
     
     Args:
         email: Destinataire
@@ -202,9 +198,8 @@ def send_offre_email_async(self, email: str, nom: str, offre_titre: str) -> bool
 # ==========================================================
 
 @celery_app.task(name="talentia.notify_user")
-def notify_user_async(user_id: str, notification_type: str, data: Dict[str, Any]) -> bool:
-    """
-    Tâche pour envoyer des notifications aux utilisateurs.
+def notify_user_async(user_id: str, notification_type: str, data: dict[str, Any]) -> bool:
+    """Tâche pour envoyer des notifications aux utilisateurs.
     
     Args:
         user_id: ID de l'utilisateur
@@ -225,8 +220,7 @@ def notify_user_async(user_id: str, notification_type: str, data: Dict[str, Any]
 
 @celery_app.task(name="talentia.process_candidature")
 def process_candidature_async(candidature_id: str) -> bool:
-    """
-    Tâche pour traiter une candidature (matching IA, etc.).
+    """Tâche pour traiter une candidature (matching IA, etc.).
     
     Args:
         candidature_id: ID de la candidature
@@ -249,8 +243,7 @@ def process_candidature_async(candidature_id: str) -> bool:
 
 @celery_app.task(name="talentia.cleanup_expired_tokens")
 def cleanup_expired_tokens_async() -> int:
-    """
-    Tâche de nettoyage des tokens expirés.
+    """Tâche de nettoyage des tokens expirés.
     
     Returns:
         int: Nombre de tokens supprimés
@@ -266,8 +259,7 @@ def cleanup_expired_tokens_async() -> int:
 
 @celery_app.task(name="talentia.cleanup_old_backups")
 def cleanup_old_backups_async() -> int:
-    """
-    Tâche de nettoyage des anciennes sauvegardes.
+    """Tâche de nettoyage des anciennes sauvegardes.
     
     Returns:
         int: Nombre de sauvegardes supprimées
@@ -287,8 +279,7 @@ def cleanup_old_backups_async() -> int:
 # ==========================================================
 
 def queue_verification_email(email: str, nom: str, token: str) -> bool:
-    """
-    Enfile un envoi d'email de vérification.
+    """Enfile un envoi d'email de vérification.
     
     Args:
         email: Destinataire
@@ -310,8 +301,7 @@ def queue_verification_email(email: str, nom: str, token: str) -> bool:
 
 
 def queue_welcome_email(email: str, nom: str) -> bool:
-    """
-    Enfile un envoi d'email de bienvenue.
+    """Enfile un envoi d'email de bienvenue.
     
     Args:
         email: Destinataire
@@ -330,8 +320,7 @@ def queue_welcome_email(email: str, nom: str) -> bool:
 
 
 def queue_reset_password_email(email: str, nom: str, token: str) -> bool:
-    """
-    Enfile un envoi d'email de réinitialisation.
+    """Enfile un envoi d'email de réinitialisation.
     
     Args:
         email: Destinataire
@@ -351,8 +340,7 @@ def queue_reset_password_email(email: str, nom: str, token: str) -> bool:
 
 
 def queue_offre_email(email: str, nom: str, offre_titre: str) -> bool:
-    """
-    Enfile un envoi d'email d'offre.
+    """Enfile un envoi d'email d'offre.
     
     Args:
         email: Destinataire
@@ -375,9 +363,8 @@ def queue_offre_email(email: str, nom: str, offre_titre: str) -> bool:
 # Monitoring
 # ==========================================================
 
-def get_task_status(task_id: str) -> Dict[str, Any]:
-    """
-    Récupère le statut d'une tâche.
+def get_task_status(task_id: str) -> dict[str, Any]:
+    """Récupère le statut d'une tâche.
     
     Args:
         task_id: ID de la tâche
@@ -396,8 +383,7 @@ def get_task_status(task_id: str) -> Dict[str, Any]:
 
 
 def get_active_tasks() -> list:
-    """
-    Récupère les tâches actives.
+    """Récupère les tâches actives.
     
     Returns:
         list: Liste des tâches actives
@@ -407,8 +393,7 @@ def get_active_tasks() -> list:
 
 
 def get_scheduled_tasks() -> list:
-    """
-    Récupère les tâches planifiées.
+    """Récupère les tâches planifiées.
     
     Returns:
         list: Liste des tâches planifiées

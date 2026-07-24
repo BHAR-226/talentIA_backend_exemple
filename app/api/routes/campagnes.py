@@ -1,7 +1,6 @@
 """Routes API pour la gestion des Campagnes de recrutement (CDC §6)."""
 
 import uuid
-from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
@@ -68,14 +67,13 @@ def _check_admin_rh(user: Utilisateur) -> None:
 @router.get("")
 def lister_campagnes(
     user: Utilisateur = Depends(get_current_user),
-    statut: Optional[str] = Query(
+    statut: str | None = Query(
         None, description="Filtrer par statut (active, terminee, annulee)"
     ),
-    search: Optional[str] = Query(None, description="Rechercher par intitulé"),
+    search: str | None = Query(None, description="Rechercher par intitulé"),
     db: Session = Depends(get_db),
 ):
-    """
-    Liste toutes les campagnes de l'entreprise.
+    """Liste toutes les campagnes de l'entreprise.
 
     **Filtres disponibles :**
     - `statut` : Filtrer par statut (active, terminee, annulee)
@@ -102,8 +100,7 @@ def creer_campagne(
     user: Utilisateur = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """
-    Crée une nouvelle campagne de recrutement.
+    """Crée une nouvelle campagne de recrutement.
 
     **Permissions :** Recruteur ou Admin RH.
     """
@@ -156,8 +153,7 @@ def update_campagne(
     user: Utilisateur = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """
-    Met à jour une campagne existante.
+    """Met à jour une campagne existante.
 
     **Permissions :** Recruteur ou Admin RH.
     **Restriction :** Une campagne terminée ou annulée ne peut être modifiée
@@ -202,8 +198,7 @@ def terminer_campagne(
     user: Utilisateur = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """
-    Marque une campagne comme terminée.
+    """Marque une campagne comme terminée.
 
     **Permissions :** Recruteur ou Admin RH.
     """
@@ -232,8 +227,7 @@ def annuler_campagne(
     user: Utilisateur = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """
-    Annule une campagne (archive également ses offres publiées).
+    """Annule une campagne (archive également ses offres publiées).
 
     **Permissions :** Recruteur ou Admin RH.
     """
@@ -262,8 +256,7 @@ def reactiver_campagne(
     user: Utilisateur = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """
-    Réactive une campagne terminée ou annulée.
+    """Réactive une campagne terminée ou annulée.
 
     **Permissions :** Admin RH uniquement.
     """
@@ -296,8 +289,7 @@ def delete_campagne(
     user: Utilisateur = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """
-    Supprime une campagne (uniquement si elle n'a pas d'offres).
+    """Supprime une campagne (uniquement si elle n'a pas d'offres).
 
     **Permissions :** Admin RH uniquement.
     """
@@ -326,8 +318,7 @@ def stats_campagne(
     user: Utilisateur = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """
-    Statistiques détaillées d'une campagne.
+    """Statistiques détaillées d'une campagne.
 
     **Statistiques retournées :**
     - Nombre d'offres associées

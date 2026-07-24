@@ -9,9 +9,8 @@ dans `.env` pour un envoi réel.
 
 import logging
 import smtplib
-from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-from typing import Optional
+from email.mime.text import MIMEText
 
 from app.core.config import settings
 
@@ -107,10 +106,9 @@ def _envoyer(
     sujet: str,
     corps_texte: str,
     corps_html: str,
-    reply_to: Optional[str] = None,
+    reply_to: str | None = None,
 ) -> bool:
-    """
-    Envoie un email avec les formats texte et HTML.
+    """Envoie un email avec les formats texte et HTML.
     
     Args:
         destinataire: Adresse email du destinataire
@@ -132,7 +130,7 @@ def _envoyer(
             corps_texte,
         )
         return True
-    
+
     try:
         # Créer le message
         message = MIMEMultipart("alternative")
@@ -140,16 +138,16 @@ def _envoyer(
         message["From"] = settings.smtp_from
         message["To"] = destinataire
         message["X-Mailer"] = "TalentIA API"
-        
+
         if reply_to:
             message["Reply-To"] = reply_to
-        
+
         # Ajouter les versions texte et HTML
         part_text = MIMEText(corps_texte, "plain", "utf-8")
         part_html = MIMEText(corps_html, "html", "utf-8")
         message.attach(part_text)
         message.attach(part_html)
-        
+
         # Envoyer via SMTP
         with smtplib.SMTP(settings.smtp_host, settings.smtp_port, timeout=10) as smtp:
             if settings.smtp_use_tls:
@@ -157,10 +155,10 @@ def _envoyer(
             if settings.smtp_user:
                 smtp.login(settings.smtp_user, settings.smtp_password)
             smtp.send_message(message)
-        
+
         logger.info(f"✅ Email envoyé avec succès à {destinataire}")
         return True
-        
+
     except smtplib.SMTPAuthenticationError as e:
         logger.error(f"❌ Erreur d'authentification SMTP: {e}")
         return False
@@ -177,8 +175,7 @@ def _envoyer(
 # ==========================================================
 
 def envoyer_email_verification(destinataire: str, nom: str, token: str) -> bool:
-    """
-    Envoie le lien de confirmation d'adresse email à l'inscription.
+    """Envoie le lien de confirmation d'adresse email à l'inscription.
     
     Args:
         destinataire: Adresse email du destinataire
@@ -190,9 +187,9 @@ def envoyer_email_verification(destinataire: str, nom: str, token: str) -> bool:
     """
     lien = f"{settings.frontend_url}/verify-email?token={token}"
     expiration = settings.email_verification_expire_minutes
-    
+
     sujet = "Confirmez votre adresse email — TalentIA"
-    
+
     texte = (
         f"Bonjour {nom},\n\n"
         f"Merci de confirmer votre adresse email en ouvrant ce lien :\n{lien}\n\n"
@@ -201,19 +198,18 @@ def envoyer_email_verification(destinataire: str, nom: str, token: str) -> bool:
         "---\n"
         "TalentIA - Plateforme de recrutement IA"
     )
-    
+
     html = TEMPLATE_VERIFICATION_EMAIL.format(
         nom=nom,
         lien=lien,
         expiration=expiration,
     )
-    
+
     return _envoyer(destinataire, sujet, texte, html)
 
 
 def envoyer_email_bienvenue(destinataire: str, nom: str) -> bool:
-    """
-    Envoie un email de bienvenue après la vérification.
+    """Envoie un email de bienvenue après la vérification.
     
     Args:
         destinataire: Adresse email du destinataire
@@ -223,7 +219,7 @@ def envoyer_email_bienvenue(destinataire: str, nom: str) -> bool:
         bool: True si l'email a été envoyé avec succès
     """
     sujet = "Bienvenue sur TalentIA !"
-    
+
     texte = (
         f"Bonjour {nom},\n\n"
         f"Bienvenue sur TalentIA ! Votre compte a été activé avec succès.\n\n"
@@ -235,7 +231,7 @@ def envoyer_email_bienvenue(destinataire: str, nom: str) -> bool:
         "---\n"
         "TalentIA - Plateforme de recrutement IA"
     )
-    
+
     html = f"""
     <!DOCTYPE html>
     <html>
@@ -261,13 +257,12 @@ def envoyer_email_bienvenue(destinataire: str, nom: str) -> bool:
     </body>
     </html>
     """
-    
+
     return _envoyer(destinataire, sujet, texte, html)
 
 
 def envoyer_email_reset_password(destinataire: str, nom: str, token: str) -> bool:
-    """
-    Envoie un email de réinitialisation de mot de passe.
+    """Envoie un email de réinitialisation de mot de passe.
     
     Args:
         destinataire: Adresse email du destinataire
@@ -279,9 +274,9 @@ def envoyer_email_reset_password(destinataire: str, nom: str, token: str) -> boo
     """
     lien = f"{settings.frontend_url}/reset-password?token={token}"
     expiration = settings.email_verification_expire_minutes
-    
+
     sujet = "Réinitialisation de votre mot de passe — TalentIA"
-    
+
     texte = (
         f"Bonjour {nom},\n\n"
         f"Nous avons reçu une demande de réinitialisation de votre mot de passe sur TalentIA.\n\n"
@@ -291,19 +286,18 @@ def envoyer_email_reset_password(destinataire: str, nom: str, token: str) -> boo
         "---\n"
         "TalentIA - Plateforme de recrutement IA"
     )
-    
+
     html = TEMPLATE_RESET_PASSWORD.format(
         nom=nom,
         lien=lien,
         expiration=expiration,
     )
-    
+
     return _envoyer(destinataire, sujet, texte, html)
 
 
 def envoyer_email_offre_envoyee(destinataire: str, nom: str, offre_titre: str) -> bool:
-    """
-    Envoie une notification quand une offre est envoyée à un candidat.
+    """Envoie une notification quand une offre est envoyée à un candidat.
     
     Args:
         destinataire: Adresse email du destinataire
@@ -314,7 +308,7 @@ def envoyer_email_offre_envoyee(destinataire: str, nom: str, offre_titre: str) -
         bool: True si l'email a été envoyé avec succès
     """
     sujet = f"Offre d'emploi envoyée — {offre_titre}"
-    
+
     texte = (
         f"Bonjour {nom},\n\n"
         f"Vous avez reçu une offre d'emploi pour le poste de {offre_titre}.\n\n"
@@ -322,7 +316,7 @@ def envoyer_email_offre_envoyee(destinataire: str, nom: str, offre_titre: str) -
         "---\n"
         "TalentIA - Plateforme de recrutement IA"
     )
-    
+
     html = f"""
     <!DOCTYPE html>
     <html>
@@ -347,5 +341,5 @@ def envoyer_email_offre_envoyee(destinataire: str, nom: str, offre_titre: str) -
     </body>
     </html>
     """
-    
+
     return _envoyer(destinataire, sujet, texte, html)

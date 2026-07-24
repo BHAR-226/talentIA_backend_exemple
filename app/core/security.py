@@ -7,7 +7,7 @@ de la réponse ni stocké côté JS : il est déposé dans un cookie httpOnly (v
 
 import secrets
 from datetime import UTC, datetime, timedelta
-from typing import Any, Optional
+from typing import Any
 
 import bcrypt
 import jwt
@@ -22,8 +22,7 @@ ALGORITHM = "HS256"
 # ==========================================================
 
 def hash_password(password: str) -> str:
-    """
-    Hache un mot de passe avec bcrypt.
+    """Hache un mot de passe avec bcrypt.
     
     Args:
         password: Mot de passe en clair
@@ -35,8 +34,7 @@ def hash_password(password: str) -> str:
 
 
 def verify_password(password: str, hashed: str) -> bool:
-    """
-    Vérifie un mot de passe par rapport à son hash.
+    """Vérifie un mot de passe par rapport à son hash.
     
     Args:
         password: Mot de passe en clair
@@ -52,8 +50,7 @@ def verify_password(password: str, hashed: str) -> bool:
 
 
 def is_password_strong(password: str) -> bool:
-    """
-    Vérifie si un mot de passe est assez fort.
+    """Vérifie si un mot de passe est assez fort.
     
     Critères:
     - Au moins 8 caractères
@@ -86,8 +83,7 @@ def is_password_strong(password: str) -> bool:
 # ==========================================================
 
 def generate_secure_token(length: int = 32) -> str:
-    """
-    Génère un token sécurisé aléatoire.
+    """Génère un token sécurisé aléatoire.
     
     Args:
         length: Longueur du token
@@ -99,8 +95,7 @@ def generate_secure_token(length: int = 32) -> str:
 
 
 def generate_otp(length: int = 6) -> str:
-    """
-    Génère un code OTP numérique.
+    """Génère un code OTP numérique.
     
     Args:
         length: Longueur du code
@@ -120,12 +115,11 @@ def create_access_token(
     *,
     type_compte: str,
     nom: str,
-    role: Optional[str] = None,
-    entreprise_id: Optional[str] = None,
-    additional_claims: Optional[dict[str, Any]] = None,
+    role: str | None = None,
+    entreprise_id: str | None = None,
+    additional_claims: dict[str, Any] | None = None,
 ) -> str:
-    """
-    Crée un JWT pour un compte (`subject` = id).
+    """Crée un JWT pour un compte (`subject` = id).
 
     `type_compte` vaut "utilisateur" (interne, avec rôle + entreprise) ou
     "candidat". Le rôle et l'entreprise ne concernent que les utilisateurs.
@@ -144,7 +138,7 @@ def create_access_token(
     expire = datetime.now(UTC) + timedelta(
         minutes=settings.access_token_expire_minutes
     )
-    
+
     payload: dict[str, Any] = {
         "sub": subject,
         "type": type_compte,
@@ -152,20 +146,19 @@ def create_access_token(
         "exp": expire,
         "iat": datetime.now(UTC),
     }
-    
+
     if role:
         payload["role"] = role
     if entreprise_id:
         payload["entreprise_id"] = entreprise_id
     if additional_claims:
         payload.update(additional_claims)
-    
+
     return jwt.encode(payload, settings.secret_key, algorithm=ALGORITHM)
 
 
 def decode_access_token(token: str) -> dict[str, Any]:
-    """
-    Décode/valide un JWT.
+    """Décode/valide un JWT.
     
     Args:
         token: JWT à décoder
@@ -180,8 +173,7 @@ def decode_access_token(token: str) -> dict[str, Any]:
 
 
 def refresh_access_token(token: str) -> str:
-    """
-    Rafraîchit un token d'accès.
+    """Rafraîchit un token d'accès.
     
     Args:
         token: Ancien token à rafraîchir
@@ -205,9 +197,8 @@ def refresh_access_token(token: str) -> str:
     )
 
 
-def get_token_expiration(token: str) -> Optional[datetime]:
-    """
-    Récupère la date d'expiration d'un token.
+def get_token_expiration(token: str) -> datetime | None:
+    """Récupère la date d'expiration d'un token.
     
     Args:
         token: JWT à examiner
@@ -231,8 +222,7 @@ def get_token_expiration(token: str) -> Optional[datetime]:
 
 
 def is_token_expired(token: str) -> bool:
-    """
-    Vérifie si un token est expiré.
+    """Vérifie si un token est expiré.
     
     Args:
         token: JWT à vérifier
@@ -251,8 +241,7 @@ def is_token_expired(token: str) -> bool:
 # ==========================================================
 
 def create_email_verification_token(subject: str, *, type_compte: str) -> str:
-    """
-    Jeton à usage unique pour confirmer une adresse email à l'inscription.
+    """Jeton à usage unique pour confirmer une adresse email à l'inscription.
 
     Distinct du JWT de session (`purpose` dédié, durée de vie courte) : même
     signé avec la même clé, il ne peut pas servir à s'authentifier sur l'API.
@@ -278,8 +267,7 @@ def create_email_verification_token(subject: str, *, type_compte: str) -> str:
 
 
 def decode_email_verification_token(token: str) -> dict[str, Any]:
-    """
-    Décode un jeton de vérification d'email et vérifie qu'il a le bon usage.
+    """Décode un jeton de vérification d'email et vérifie qu'il a le bon usage.
     
     Args:
         token: Jeton à décoder
@@ -301,8 +289,7 @@ def decode_email_verification_token(token: str) -> dict[str, Any]:
 # ==========================================================
 
 def create_password_reset_token(subject: str, *, type_compte: str) -> str:
-    """
-    Crée un jeton de réinitialisation de mot de passe.
+    """Crée un jeton de réinitialisation de mot de passe.
     
     Args:
         subject: ID du compte
@@ -325,8 +312,7 @@ def create_password_reset_token(subject: str, *, type_compte: str) -> str:
 
 
 def decode_password_reset_token(token: str) -> dict[str, Any]:
-    """
-    Décode un jeton de réinitialisation de mot de passe.
+    """Décode un jeton de réinitialisation de mot de passe.
     
     Args:
         token: Jeton à décoder
@@ -348,8 +334,7 @@ def decode_password_reset_token(token: str) -> dict[str, Any]:
 # ==========================================================
 
 def validate_token_type(token: str, expected_type: str) -> bool:
-    """
-    Vérifie le type d'un token.
+    """Vérifie le type d'un token.
     
     Args:
         token: JWT à vérifier
@@ -373,9 +358,8 @@ def validate_token_type(token: str, expected_type: str) -> bool:
         return False
 
 
-def get_user_id_from_token(token: str) -> Optional[str]:
-    """
-    Extrait l'ID utilisateur d'un token sans vérifier l'expiration.
+def get_user_id_from_token(token: str) -> str | None:
+    """Extrait l'ID utilisateur d'un token sans vérifier l'expiration.
     
     Args:
         token: JWT à décoder

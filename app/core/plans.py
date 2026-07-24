@@ -4,16 +4,14 @@ Prix en FCFA/mois — valeurs indicatives ; la facturation réelle est hors
 périmètre MVP. Source unique pour l'endpoint `GET /abonnements/plans`.
 """
 
-from typing import Dict, List, Optional
 
 from app.core.enums import PlanAbonnement
-
 
 # ==========================================================
 # Définition du catalogue
 # ==========================================================
 
-PLAN_CATALOG: Dict[PlanAbonnement, Dict] = {
+PLAN_CATALOG: dict[PlanAbonnement, dict] = {
     PlanAbonnement.starter: {
         "label": "Starter",
         "prix": "45 000",
@@ -89,9 +87,8 @@ PLAN_CATALOG: Dict[PlanAbonnement, Dict] = {
 # Fonctions utilitaires
 # ==========================================================
 
-def get_plan(plan: PlanAbonnement) -> Optional[Dict]:
-    """
-    Récupère les détails d'un plan.
+def get_plan(plan: PlanAbonnement) -> dict | None:
+    """Récupère les détails d'un plan.
     
     Args:
         plan: Plan d'abonnement
@@ -102,9 +99,8 @@ def get_plan(plan: PlanAbonnement) -> Optional[Dict]:
     return PLAN_CATALOG.get(plan)
 
 
-def get_plan_features(plan: PlanAbonnement) -> List[str]:
-    """
-    Récupère les fonctionnalités d'un plan.
+def get_plan_features(plan: PlanAbonnement) -> list[str]:
+    """Récupère les fonctionnalités d'un plan.
     
     Args:
         plan: Plan d'abonnement
@@ -116,9 +112,8 @@ def get_plan_features(plan: PlanAbonnement) -> List[str]:
     return plan_data.get("features", []) if plan_data else []
 
 
-def get_plan_limits(plan: PlanAbonnement) -> Dict:
-    """
-    Récupère les limites d'un plan.
+def get_plan_limits(plan: PlanAbonnement) -> dict:
+    """Récupère les limites d'un plan.
     
     Args:
         plan: Plan d'abonnement
@@ -131,8 +126,7 @@ def get_plan_limits(plan: PlanAbonnement) -> Dict:
 
 
 def get_plan_price(plan: PlanAbonnement, annual: bool = False) -> str:
-    """
-    Récupère le prix d'un plan.
+    """Récupère le prix d'un plan.
     
     Args:
         plan: Plan d'abonnement
@@ -144,14 +138,13 @@ def get_plan_price(plan: PlanAbonnement, annual: bool = False) -> str:
     plan_data = get_plan(plan)
     if not plan_data:
         return ""
-    
+
     key = "prix_annuel" if annual else "prix"
     return plan_data.get(key, plan_data.get("prix", ""))
 
 
-def get_all_plans() -> List[Dict]:
-    """
-    Récupère tous les plans sous forme de liste.
+def get_all_plans() -> list[dict]:
+    """Récupère tous les plans sous forme de liste.
     
     Returns:
         List[Dict]: Liste de tous les plans avec leur clé
@@ -162,9 +155,8 @@ def get_all_plans() -> List[Dict]:
     ]
 
 
-def get_recommended_plan() -> Optional[PlanAbonnement]:
-    """
-    Récupère le plan recommandé.
+def get_recommended_plan() -> PlanAbonnement | None:
+    """Récupère le plan recommandé.
     
     Returns:
         PlanAbonnement: Plan recommandé ou None
@@ -175,9 +167,8 @@ def get_recommended_plan() -> Optional[PlanAbonnement]:
     return None
 
 
-def get_plans_by_price_range(min_price: int, max_price: int) -> List[PlanAbonnement]:
-    """
-    Récupère les plans dans une fourchette de prix.
+def get_plans_by_price_range(min_price: int, max_price: int) -> list[PlanAbonnement]:
+    """Récupère les plans dans une fourchette de prix.
     
     Args:
         min_price: Prix minimum
@@ -198,9 +189,8 @@ def get_plans_by_price_range(min_price: int, max_price: int) -> List[PlanAbonnem
     return result
 
 
-def compare_plans(plans: List[PlanAbonnement]) -> Dict:
-    """
-    Compare plusieurs plans.
+def compare_plans(plans: list[PlanAbonnement]) -> dict:
+    """Compare plusieurs plans.
     
     Args:
         plans: Liste des plans à comparer
@@ -213,7 +203,7 @@ def compare_plans(plans: List[PlanAbonnement]) -> Dict:
         "features": {},
         "prices": {},
     }
-    
+
     for plan in plans:
         plan_data = get_plan(plan)
         if plan_data:
@@ -223,15 +213,15 @@ def compare_plans(plans: List[PlanAbonnement]) -> Dict:
                 "price": plan_data.get("prix"),
                 "recommended": plan_data.get("recommended", False),
             })
-            
+
             # Regrouper les fonctionnalités
             for feature in plan_data.get("features", []):
                 if feature not in comparison["features"]:
                     comparison["features"][feature] = []
                 comparison["features"][feature].append(plan.value)
-            
+
             comparison["prices"][plan.value] = plan_data.get("prix")
-    
+
     return comparison
 
 
@@ -240,8 +230,7 @@ def compare_plans(plans: List[PlanAbonnement]) -> Dict:
 # ==========================================================
 
 def validate_plan(plan: PlanAbonnement) -> bool:
-    """
-    Valide qu'un plan existe dans le catalogue.
+    """Valide qu'un plan existe dans le catalogue.
     
     Args:
         plan: Plan à valider
@@ -252,9 +241,8 @@ def validate_plan(plan: PlanAbonnement) -> bool:
     return plan in PLAN_CATALOG
 
 
-def get_plan_limits_dict(plan: PlanAbonnement) -> Dict:
-    """
-    Retourne les limites d'un plan sous forme de dictionnaire.
+def get_plan_limits_dict(plan: PlanAbonnement) -> dict:
+    """Retourne les limites d'un plan sous forme de dictionnaire.
     
     Args:
         plan: Plan d'abonnement
@@ -268,6 +256,6 @@ def get_plan_limits_dict(plan: PlanAbonnement) -> Dict:
         "candidatures_par_offre": 0,
         "stockage_cv": "0 MB",
     }
-    
+
     plan_limits = get_plan_limits(plan)
     return {**default_limits, **plan_limits}

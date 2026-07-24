@@ -7,7 +7,6 @@ Deux niveaux d'accès (cf. cahier des charges) :
 """
 
 import uuid
-from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
@@ -85,8 +84,7 @@ def get_mon_entreprise(
     user: Utilisateur = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """
-    Récupère l'entreprise (tenant) de l'utilisateur connecté.
+    """Récupère l'entreprise (tenant) de l'utilisateur connecté.
     
     **Accessible à tous les utilisateurs internes.**
     """
@@ -95,7 +93,7 @@ def get_mon_entreprise(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="L'utilisateur n'est rattaché à aucune entreprise."
         )
-    
+
     entreprise = _get_or_404(db, user.entreprise_id)
     return success(EntrepriseResponse.model_validate(entreprise))
 
@@ -105,8 +103,7 @@ def get_mon_entreprise_stats(
     user: Utilisateur = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """
-    Récupère les statistiques de l'entreprise de l'utilisateur connecté.
+    """Récupère les statistiques de l'entreprise de l'utilisateur connecté.
     
     **Accessible à tous les utilisateurs internes.**
     """
@@ -115,9 +112,9 @@ def get_mon_entreprise_stats(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="L'utilisateur n'est rattaché à aucune entreprise."
         )
-    
+
     entreprise = _get_or_404(db, user.entreprise_id)
-    
+
     stats = {
         "id": str(entreprise.id),
         "nom": entreprise.nom,
@@ -128,7 +125,7 @@ def get_mon_entreprise_stats(
         "nombre_campagnes_actives": entreprise.nombre_campagnes_actives,
         "a_abonnement_actif": entreprise.a_abonnement_actif,
     }
-    
+
     return success(stats)
 
 
@@ -139,27 +136,26 @@ def get_mon_entreprise_stats(
 @router.get("")
 def lister_entreprises(
     user: Utilisateur = Depends(get_current_user),
-    statut: Optional[str] = Query(None, description="Filtrer par statut"),
-    search: Optional[str] = Query(None, description="Rechercher par nom"),
+    statut: str | None = Query(None, description="Filtrer par statut"),
+    search: str | None = Query(None, description="Rechercher par nom"),
     db: Session = Depends(get_db),
 ):
-    """
-    Liste toutes les entreprises (réservé à l'admin plateforme).
+    """Liste toutes les entreprises (réservé à l'admin plateforme).
     
     **Filtres disponibles :**
     - `statut` : Filtrer par statut (active, suspendue)
     - `search` : Recherche textuelle dans le nom
     """
     _ensure_admin_plateforme(user)
-    
+
     query = db.query(Entreprise)
-    
+
     if statut:
         query = query.filter(Entreprise.statut == statut)
-    
+
     if search:
         query = query.filter(Entreprise.nom.ilike(f"%{search}%"))
-    
+
     entreprises = query.order_by(Entreprise.nom).all()
     return success([EntrepriseResponse.model_validate(e) for e in entreprises])
 
@@ -170,16 +166,15 @@ def creer_entreprise(
     user: Utilisateur = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """
-    Crée une nouvelle entreprise (réservé à l'admin plateforme).
+    """Crée une nouvelle entreprise (réservé à l'admin plateforme).
     """
     _ensure_admin_plateforme(user)
-    
+
     entreprise = Entreprise(**payload.model_dump())
     db.add(entreprise)
     db.commit()
     db.refresh(entreprise)
-    
+
     return success(
         EntrepriseResponse.model_validate(entreprise),
         "Entreprise créée avec succès."
@@ -196,8 +191,7 @@ def get_entreprise(
     user: Utilisateur = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """
-    Récupère une entreprise par son ID.
+    """Récupère une entreprise par son ID.
     
     **Permissions :**
     - Admin plateforme : toutes les entreprises
@@ -215,8 +209,7 @@ def update_entreprise(
     user: Utilisateur = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """
-    Met à jour une entreprise.
+    """Met à jour une entreprise.
     
     **Permissions :**
     - Admin plateforme : toutes les entreprises
@@ -224,13 +217,13 @@ def update_entreprise(
     """
     _ensure_write(user, entreprise_id)
     entreprise = _get_or_404(db, entreprise_id)
-    
+
     for champ, valeur in payload.model_dump(exclude_unset=True).items():
         setattr(entreprise, champ, valeur)
-    
+
     db.commit()
     db.refresh(entreprise)
-    
+
     return success(
         EntrepriseResponse.model_validate(entreprise),
         "Entreprise mise à jour avec succès."
@@ -248,25 +241,24 @@ def suspendre_entreprise(
     user: Utilisateur = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """
-    Suspend une entreprise (réservé à l'admin plateforme).
+    """Suspend une entreprise (réservé à l'admin plateforme).
     
     Coupe l'accès de TOUS les membres de l'entreprise dès la requête suivante.
     Réversible via `/reactiver`.
     """
     _ensure_admin_plateforme(user)
-    
+
     if entreprise_id == user.entreprise_id:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Impossible de suspendre votre propre entreprise (plateforme)."
         )
-    
+
     entreprise = _get_or_404(db, entreprise_id)
     entreprise.suspendre(payload.motif)
     db.commit()
     db.refresh(entreprise)
-    
+
     return success(
         EntrepriseResponse.model_validate(entreprise),
         "Entreprise suspendue avec succès."
@@ -279,16 +271,15 @@ def reactiver_entreprise(
     user: Utilisateur = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """
-    Réactive une entreprise suspendue (réservé à l'admin plateforme).
+    """Réactive une entreprise suspendue (réservé à l'admin plateforme).
     """
     _ensure_admin_plateforme(user)
-    
+
     entreprise = _get_or_404(db, entreprise_id)
     entreprise.reactiver()
     db.commit()
     db.refresh(entreprise)
-    
+
     return success(
         EntrepriseResponse.model_validate(entreprise),
         "Entreprise réactivée avec succès."
@@ -304,11 +295,10 @@ def stats_globales(
     user: Utilisateur = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """
-    Statistiques globales de toutes les entreprises (réservé à l'admin plateforme).
+    """Statistiques globales de toutes les entreprises (réservé à l'admin plateforme).
     """
     _ensure_admin_plateforme(user)
-    
+
     total_entreprises = db.query(Entreprise).count()
     entreprises_actives = db.query(Entreprise).filter(
         Entreprise.statut == StatutEntreprise.active
@@ -316,12 +306,12 @@ def stats_globales(
     entreprises_suspendues = db.query(Entreprise).filter(
         Entreprise.statut == StatutEntreprise.suspendue
     ).count()
-    
+
     stats = {
         "total_entreprises": total_entreprises,
         "entreprises_actives": entreprises_actives,
         "entreprises_suspendues": entreprises_suspendues,
         "taux_activation": round((entreprises_actives / total_entreprises) * 100, 2) if total_entreprises > 0 else 0,
     }
-    
+
     return success(stats)

@@ -2,7 +2,6 @@
 
 import uuid
 from datetime import datetime
-from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
@@ -12,7 +11,7 @@ from app.core.validators import validate_email_domain
 
 class UtilisateurCreate(BaseModel):
     """Schéma pour la création d'un utilisateur par un admin RH."""
-    
+
     nom: str = Field(
         min_length=1,
         max_length=100,
@@ -30,17 +29,17 @@ class UtilisateurCreate(BaseModel):
         default=RoleUtilisateur.recruteur,
         description="Rôle de l'utilisateur"
     )
-    telephone: Optional[str] = Field(
+    telephone: str | None = Field(
         default=None,
         max_length=50,
         description="Numéro de téléphone"
     )
-    fonction: Optional[str] = Field(
+    fonction: str | None = Field(
         default=None,
         max_length=255,
         description="Fonction ou poste occupé"
     )
-    
+
     @field_validator('email')
     @classmethod
     def validate_email(cls, v: str) -> str:
@@ -52,39 +51,39 @@ class UtilisateurUpdate(BaseModel):
     """Schéma pour la mise à jour d'un utilisateur par un admin RH.
     Tous les champs sont optionnels pour une mise à jour partielle.
     """
-    
-    nom: Optional[str] = Field(
+
+    nom: str | None = Field(
         default=None,
         min_length=1,
         max_length=100,
         description="Nom complet de l'utilisateur"
     )
-    email: Optional[EmailStr] = Field(
+    email: EmailStr | None = Field(
         default=None,
         description="Adresse email de l'utilisateur"
     )
-    role: Optional[RoleUtilisateur] = Field(
+    role: RoleUtilisateur | None = Field(
         default=None,
         description="Rôle de l'utilisateur"
     )
-    actif: Optional[bool] = Field(
+    actif: bool | None = Field(
         default=None,
         description="Indique si le compte est actif"
     )
-    telephone: Optional[str] = Field(
+    telephone: str | None = Field(
         default=None,
         max_length=50,
         description="Numéro de téléphone"
     )
-    fonction: Optional[str] = Field(
+    fonction: str | None = Field(
         default=None,
         max_length=255,
         description="Fonction ou poste occupé"
     )
-    
+
     @field_validator('email')
     @classmethod
-    def validate_email(cls, v: Optional[str]) -> Optional[str]:
+    def validate_email(cls, v: str | None) -> str | None:
         """Valide le domaine de l'email."""
         if v:
             return validate_email_domain(v)
@@ -95,31 +94,31 @@ class ProfilUtilisateurUpdate(BaseModel):
     """Schéma pour la mise à jour du profil personnel d'un utilisateur.
     L'utilisateur peut modifier son nom, email, téléphone et fonction.
     """
-    
-    nom: Optional[str] = Field(
+
+    nom: str | None = Field(
         default=None,
         min_length=1,
         max_length=100,
         description="Nom complet de l'utilisateur"
     )
-    email: Optional[EmailStr] = Field(
+    email: EmailStr | None = Field(
         default=None,
         description="Adresse email de l'utilisateur"
     )
-    telephone: Optional[str] = Field(
+    telephone: str | None = Field(
         default=None,
         max_length=50,
         description="Numéro de téléphone"
     )
-    fonction: Optional[str] = Field(
+    fonction: str | None = Field(
         default=None,
         max_length=255,
         description="Fonction ou poste occupé"
     )
-    
+
     @field_validator('email')
     @classmethod
-    def validate_email(cls, v: Optional[str]) -> Optional[str]:
+    def validate_email(cls, v: str | None) -> str | None:
         """Valide le domaine de l'email."""
         if v:
             return validate_email_domain(v)
@@ -128,7 +127,7 @@ class ProfilUtilisateurUpdate(BaseModel):
 
 class ChangerMotDePasseRequest(BaseModel):
     """Schéma pour le changement de mot de passe d'un utilisateur."""
-    
+
     mot_de_passe_actuel: str = Field(
         description="Mot de passe actuel de l'utilisateur"
     )
@@ -141,25 +140,25 @@ class ChangerMotDePasseRequest(BaseModel):
 
 class UtilisateurResponse(BaseModel):
     """Réponse complète d'un utilisateur."""
-    
+
     model_config = ConfigDict(from_attributes=True)
-    
+
     # Identifiants
     id: uuid.UUID = Field(description="ID unique de l'utilisateur")
     entreprise_id: uuid.UUID = Field(description="ID de l'entreprise associée")
-    
+
     # Informations personnelles
     nom: str = Field(description="Nom complet de l'utilisateur")
     email: str = Field(description="Adresse email")
-    telephone: Optional[str] = Field(
+    telephone: str | None = Field(
         default=None,
         description="Numéro de téléphone"
     )
-    fonction: Optional[str] = Field(
+    fonction: str | None = Field(
         default=None,
         description="Fonction ou poste occupé"
     )
-    
+
     # Rôle et statut
     role: RoleUtilisateur = Field(description="Rôle de l'utilisateur")
     actif: bool = Field(
@@ -170,11 +169,11 @@ class UtilisateurResponse(BaseModel):
         default=False,
         description="Indique si l'email a été vérifié"
     )
-    
+
     # Métadonnées
     created_at: datetime = Field(description="Date de création du compte")
     updated_at: datetime = Field(description="Date de dernière mise à jour")
-    derniere_connexion: Optional[datetime] = Field(
+    derniere_connexion: datetime | None = Field(
         default=None,
         description="Date de dernière connexion"
     )

@@ -2,15 +2,13 @@
 
 import re
 import time
-from typing import Callable
+from collections.abc import Callable
 
 from fastapi import APIRouter
-from prometheus_client import Counter, Histogram, Gauge, generate_latest
+from prometheus_client import Counter, Gauge, Histogram, generate_latest
 from sqlalchemy.orm import Session
 from starlette.requests import Request
 from starlette.responses import Response
-
-
 
 # ==========================================================
 # Définition des métriques
@@ -85,16 +83,16 @@ CACHE_MISSES = Counter(
 
 class MetricsMiddleware:
     """Middleware pour collecter automatiquement les métriques HTTP."""
-    
+
     def __init__(self, app):
         self.app = app
-    
+
     async def __call__(self, request: Request, call_next: Callable):
         # Incrémenter les requêtes en cours
         REQUESTS_IN_PROGRESS.inc()
-        
+
         start = time.time()
-        
+
         try:
             response = await call_next(request)
         except Exception as e:
@@ -105,39 +103,39 @@ class MetricsMiddleware:
                 status='500'
             ).inc()
             raise
-        
+
         duration = time.time() - start
-        
+
         # Normaliser le path pour éviter la cardinalité infinie
         path = _normalize_path(request.url.path)
-        
+
         # Enregistrer les métriques
         REQUEST_COUNT.labels(
             method=request.method,
             endpoint=path,
             status=response.status_code
         ).inc()
-        
+
         REQUEST_DURATION.labels(
             method=request.method,
             endpoint=path
         ).observe(duration)
-        
+
         RESPONSE_TIME_PERCENTILES.labels(
             method=request.method,
             endpoint=path
         ).observe(duration)
-        
+
         # Compter les erreurs 4xx et 5xx
         if response.status_code >= 400:
             ERRORS_BY_TYPE.labels(
                 type='http_error',
                 status=response.status_code
             ).inc()
-        
+
         # Décrémenter les requêtes en cours
         REQUESTS_IN_PROGRESS.dec()
-        
+
         return response
 
 
@@ -165,8 +163,7 @@ router = APIRouter(tags=["metrics"])
 
 @router.get("/metrics")
 def metrics():
-    """
-    Endpoint Prometheus pour récupérer les métriques.
+    """Endpoint Prometheus pour récupérer les métriques.
     
     **Usage:** Configurer Prometheus pour scraper cet endpoint.
     """
@@ -181,20 +178,20 @@ def update_active_users_metrics(db: Session) -> None:
     """Met à jour la métrique des utilisateurs actifs."""
     from app.models.candidat import Candidat
     from app.models.utilisateur import Utilisateur
-    
+
     # Compter les candidats actifs
     candidats_actifs = db.query(Candidat).filter(
         Candidat.email_verifie == True,
         Candidat.deleted_at.is_(None)
     ).count()
-    
+
     # Compter les utilisateurs internes actifs
     utilisateurs_actifs = db.query(Utilisateur).filter(
         Utilisateur.actif == True,
         Utilisateur.email_verifie == True,
         Utilisateur.deleted_at.is_(None)
     ).count()
-    
+
     # Mettre à jour les gauges
     ACTIVE_USERS.labels(type='candidat').set(candidats_actifs)
     ACTIVE_USERS.labels(type='utilisateur').set(utilisateurs_actifs)
@@ -213,8 +210,7 @@ def update_db_pool_metrics(engine) -> None:
 # ==========================================================
 
 def record_cache_metric(hit: bool, cache_type: str = "default") -> None:
-    """
-    Enregistre une métrique de cache.
+    """Enregistre une métrique de cache.
     
     Args:
         hit: True si le cache a été touché, False sinon
@@ -231,8 +227,7 @@ def record_cache_metric(hit: bool, cache_type: str = "default") -> None:
 # ==========================================================
 
 def track_performance(name: str):
-    """
-    Décorateur pour suivre les performances d'une fonction.
+    """Décorateur pour suivre les performances d'une fonction.
     
     Usage:
         @track_performance("user_service")
@@ -269,7 +264,7 @@ def init_metrics() -> None:
     """Initialise les métriques avec des valeurs par défaut."""
     # Initialiser les compteurs à 0
     REQUEST_COUNT.labels(method='GET', endpoint='/', status=200).inc(0)
-    
+
     # Initialiser les gauges
     ACTIVE_USERS.labels(type='candidat').set(0)
     ACTIVE_USERS.labels(type='utilisateur').set(0)
@@ -287,7 +282,7 @@ def metrics_diagnostic():
         "status": "ok",
         "metrics_count": len([name for name in globals() if isinstance(globals()[name], (Counter, Histogram, Gauge))]),
         "registered_metrics": [
-            name for name in globals() 
+            name for name in globals()
             if isinstance(globals()[name], (Counter, Histogram, Gauge))
         ]
     }

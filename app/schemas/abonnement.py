@@ -2,7 +2,6 @@
 
 import uuid
 from datetime import datetime
-from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -19,17 +18,17 @@ class AbonnementResponse(BaseModel):
     statut: StatutAbonnement
     date_debut: datetime
     date_fin: datetime
-    
+
     # Champs de suivi
     renouvellement_auto: bool = Field(
         default=False,
         description="Indique si l'abonnement se renouvelle automatiquement"
     )
-    derniere_renouvellement: Optional[datetime] = Field(
+    derniere_renouvellement: datetime | None = Field(
         default=None,
         description="Date du dernier renouvellement"
     )
-    
+
     # Propriétés calculées
     jours_restants: int = Field(
         description="Nombre de jours restants avant expiration"
@@ -54,33 +53,33 @@ class PlanCatalogItem(BaseModel):
 
 class AdminStats(BaseModel):
     """Indicateurs du dashboard admin, scopés au tenant courant."""
-    
+
     # Statistiques RH
     utilisateurs_actifs: int = Field(description="Nombre d'utilisateurs actifs")
     recruteurs: int = Field(description="Nombre de recruteurs")
     offres_total: int = Field(description="Nombre total d'offres")
     candidatures_total: int = Field(description="Nombre total de candidatures")
-    
+
     # Métriques de performance
-    campagnes_actives: Optional[int] = Field(
+    campagnes_actives: int | None = Field(
         default=0,
         description="Nombre de campagnes actives"
     )
-    taux_conversion: Optional[float] = Field(
+    taux_conversion: float | None = Field(
         default=None,
         description="Taux de conversion (candidatures / offres) en pourcentage"
     )
-    temps_moyen_recrutement: Optional[float] = Field(
+    temps_moyen_recrutement: float | None = Field(
         default=None,
         description="Temps moyen de recrutement en jours"
     )
-    
+
     # Abonnement
-    plan: Optional[PlanAbonnement] = Field(
+    plan: PlanAbonnement | None = Field(
         default=None,
         description="Plan d'abonnement actuel"
     )
-    statut_abonnement: Optional[StatutAbonnement] = Field(
+    statut_abonnement: StatutAbonnement | None = Field(
         default=None,
         description="Statut de l'abonnement"
     )

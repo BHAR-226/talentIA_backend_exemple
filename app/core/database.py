@@ -25,7 +25,6 @@ logger = logging.getLogger("talentia.database")
 
 def create_database_engine() -> Engine:
     """Crée et configure le moteur SQLAlchemy."""
-    
     # Options de pool de connexions
     pool_options = {
         "pool_size": 10,                 # Nombre de connexions dans le pool
@@ -34,31 +33,31 @@ def create_database_engine() -> Engine:
         "pool_recycle": 3600,            # Recyclage des connexions après 1 heure
         "pool_pre_ping": True,           # Vérifier la connexion avant utilisation
     }
-    
+
     # Options d'engine
     engine_options = {
         "echo": settings.debug,          # Log des requêtes SQL en dev
         "future": True,                  # Utiliser la nouvelle syntaxe SQLAlchemy 2.0
         "poolclass": QueuePool,          # Utiliser le pool de connexions
     }
-    
+
     # Ajouter les options du pool
     engine_options.update(pool_options)
-    
+
     engine = create_engine(
         settings.database_url,
         **engine_options,
     )
-    
+
     # Ajouter un listener pour logger les connexions
     @event.listens_for(engine, "connect")
     def receive_connect(dbapi_connection, connection_record):
         logger.debug("Nouvelle connexion à la base de données établie")
-    
+
     @event.listens_for(engine, "checkout")
     def receive_checkout(dbapi_connection, connection_record, connection_proxy):
         logger.debug("Connexion récupérée du pool")
-    
+
     return engine
 
 
@@ -80,10 +79,10 @@ SessionLocal = sessionmaker(
 
 class Base(DeclarativeBase):
     """Classe de base déclarative partagée par tous les modèles."""
-    
+
     # À implémenter plus tard pour le soft delete automatique
     # __abstract__ = True
-    
+
     def __repr__(self) -> str:
         """Représentation de l'objet pour le logging."""
         return f"<{self.__class__.__name__} id={getattr(self, 'id', None)}>"
@@ -94,8 +93,7 @@ class Base(DeclarativeBase):
 # ==========================================================
 
 def get_db() -> Generator[Session, None, None]:
-    """
-    Dépendance FastAPI pour obtenir une session de base de données.
+    """Dépendance FastAPI pour obtenir une session de base de données.
     
     Yields:
         Session: Une session SQLAlchemy pour la requête en cours.
@@ -121,8 +119,7 @@ def get_db() -> Generator[Session, None, None]:
 
 @contextmanager
 def transaction(db: Session) -> Generator[Session, None, None]:
-    """
-    Gestionnaire de transaction pour une session.
+    """Gestionnaire de transaction pour une session.
     
     Usage:
         with transaction(db) as session:
@@ -159,7 +156,7 @@ def drop_tables() -> None:
     """Supprime toutes les tables de la base de données (⚠️ DANGER)."""
     if settings.environment == "production":
         raise RuntimeError("⚠️ Impossible de supprimer les tables en production !")
-    
+
     logger.warning("⚠️ Suppression de toutes les tables de la base de données...")
     Base.metadata.drop_all(bind=engine)
     logger.warning("Tables supprimées")
@@ -174,10 +171,10 @@ def get_db_stats() -> dict:
             "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public'"
         )
         table_count = result.scalar()
-        
+
         result = db.execute("SELECT COUNT(*) FROM information_schema.columns")
         column_count = result.scalar()
-        
+
         return {
             "table_count": table_count,
             "column_count": column_count,
@@ -198,6 +195,6 @@ def init_db(create_tables_if_missing: bool = False) -> None:
     """Initialise la base de données au démarrage."""
     if create_tables_if_missing and settings.environment != "production":
         create_tables()
-    
+
     logger.info(f"✅ Base de données connectée : {engine.url}")
     logger.info(f"   Pool size: {engine.pool.size()}, Overflow: {engine.pool.overflow()}")

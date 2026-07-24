@@ -93,8 +93,7 @@ def register(
     request: Request,
     db: Session = Depends(get_db)
 ):
-    """
-    Crée un nouveau compte (candidat ou recruteur) et envoie un email de confirmation.
+    """Crée un nouveau compte (candidat ou recruteur) et envoie un email de confirmation.
     
     **Candidat** : Compte créé immédiatement, email de vérification envoyé.
     
@@ -111,7 +110,7 @@ def _register_candidat(payload: RegisterRequest, db: Session):
     """Inscription d'un candidat."""
     if db.query(Candidat).filter(Candidat.email == payload.email).first():
         raise HTTPException(status.HTTP_409_CONFLICT, "Cet email a déjà un compte.")
-    
+
     candidat = Candidat(
         nom=payload.nom,
         email=payload.email,
@@ -123,7 +122,7 @@ def _register_candidat(payload: RegisterRequest, db: Session):
 
     token = create_email_verification_token(str(candidat.id), type_compte="candidat")
     envoyer_email_verification(candidat.email, candidat.nom, token)
-    
+
     # Audit log
     audit = AuditLog.create_log(
         table_name="candidats",
@@ -134,7 +133,7 @@ def _register_candidat(payload: RegisterRequest, db: Session):
     )
     db.add(audit)
     db.commit()
-    
+
     return success(
         _identity_from_candidat(candidat),
         "Compte créé. Vérifiez votre boîte mail pour confirmer votre inscription.",
@@ -148,7 +147,7 @@ def _register_recruteur(payload: RegisterRequest, request: Request, db: Session)
             status.HTTP_422_UNPROCESSABLE_ENTITY,
             "Le nom de l'entreprise est requis pour un recruteur.",
         )
-    
+
     if db.query(Utilisateur).filter(Utilisateur.email == payload.email).first():
         raise HTTPException(status.HTTP_409_CONFLICT, "Cet email a déjà un compte.")
 
@@ -158,13 +157,13 @@ def _register_recruteur(payload: RegisterRequest, request: Request, db: Session)
         .filter(func.lower(Entreprise.nom) == nom_ent.lower())
         .first()
     )
-    
+
     if entreprise is None:
         # Nouvelle entreprise → Admin RH + essai gratuit
         entreprise = Entreprise(nom=nom_ent)
         db.add(entreprise)
         db.flush()
-        
+
         maintenant = datetime.now(UTC)
         db.add(
             Abonnement(
@@ -201,7 +200,7 @@ def _register_recruteur(payload: RegisterRequest, request: Request, db: Session)
 
     token = create_email_verification_token(str(user.id), type_compte="utilisateur")
     envoyer_email_verification(user.email, user.nom, token)
-    
+
     # Audit log
     audit = AuditLog.create_log(
         table_name="utilisateurs",
@@ -217,7 +216,7 @@ def _register_recruteur(payload: RegisterRequest, request: Request, db: Session)
     )
     db.add(audit)
     db.commit()
-    
+
     return success(_identity_from_user(user), message)
 
 
@@ -232,8 +231,7 @@ def verify_email(
     response: Response,
     db: Session = Depends(get_db)
 ):
-    """
-    Confirme l'adresse email depuis le lien envoyé à l'inscription.
+    """Confirme l'adresse email depuis le lien envoyé à l'inscription.
     
     Si le compte est utilisable (actif), la session est ouverte directement.
     Un recruteur en attente de validation admin reste bloqué.
@@ -253,11 +251,11 @@ def verify_email(
         candidat = db.get(Candidat, UUID(sub))
         if candidat is None:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Compte introuvable.")
-        
+
         candidat.email_verifie = True
         db.commit()
         db.refresh(candidat)
-        
+
         token_session = create_access_token(
             str(candidat.id),
             type_compte="candidat",
@@ -272,7 +270,7 @@ def verify_email(
     user = db.get(Utilisateur, UUID(sub))
     if user is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Compte introuvable.")
-    
+
     user.email_verifie = True
     db.commit()
     db.refresh(user)
@@ -299,8 +297,7 @@ def resend_verification(
     payload: ResendVerificationRequest,
     db: Session = Depends(get_db)
 ):
-    """
-    Renvoie le lien de confirmation d'email.
+    """Renvoie le lien de confirmation d'email.
     
     Réponse volontairement identique que le compte existe ou non,
     pour ne pas révéler quels emails sont inscrits.
@@ -332,8 +329,7 @@ def login(
     response: Response,
     db: Session = Depends(get_db)
 ):
-    """
-    Connecte un utilisateur ou un candidat.
+    """Connecte un utilisateur ou un candidat.
     
     Vérifications :
     - Email vérifié
@@ -378,13 +374,13 @@ def _login_user(user: Utilisateur, response: Response, db: Session):
             status.HTTP_403_FORBIDDEN,
             "Email non confirmé. Vérifiez votre boîte mail.",
         )
-    
+
     if not user.actif:
         raise HTTPException(
             status.HTTP_403_FORBIDDEN,
             "Compte désactivé ou en attente de validation par un administrateur.",
         )
-    
+
     if user.entreprise.statut == StatutEntreprise.suspendue:
         raise HTTPException(
             status.HTTP_403_FORBIDDEN,
@@ -400,10 +396,10 @@ def _login_user(user: Utilisateur, response: Response, db: Session):
         entreprise_id=str(user.entreprise_id),
     )
     set_auth_cookie(response, token)
-    
+
     user.update_last_login()
     db.commit()
-    
+
     return success(_identity_from_user(user), "Connexion réussie.")
 
 
@@ -414,7 +410,7 @@ def _login_candidat(candidat: Candidat, response: Response, db: Session):
             status.HTTP_403_FORBIDDEN,
             "Email non confirmé. Vérifiez votre boîte mail.",
         )
-    
+
     rate_limit.reinitialiser(candidat.email)
     token = create_access_token(
         str(candidat.id),
@@ -441,8 +437,7 @@ def me(
     identity: CurrentIdentity = Depends(get_current_identity),
     db: Session = Depends(get_db),
 ):
-    """
-    Récupère l'identité de la session courante.
+    """Récupère l'identité de la session courante.
     
     Recharge les données depuis la base pour avoir les informations à jour.
     """

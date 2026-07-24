@@ -1,11 +1,9 @@
-"""
-Routes API pour la gestion des candidatures.
+"""Routes API pour la gestion des candidatures.
 """
 
 import json
 import uuid
 from pathlib import Path
-from typing import Optional
 
 from fastapi import (
     APIRouter,
@@ -27,8 +25,8 @@ from app.core.responses import success
 from app.core.validators import validate_custom_fields, validate_file_upload
 from app.models.abonnement import Abonnement
 from app.models.campagne import Campagne
-from app.models.candidature import Candidature
 from app.models.candidat import Candidat
+from app.models.candidature import Candidature
 from app.models.offre import Offre
 from app.models.utilisateur import Utilisateur
 from app.schemas.candidature import (
@@ -52,12 +50,12 @@ UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 def _get_candidature_or_404(
     db: Session,
     candidature_id: uuid.UUID,
-    entreprise_id: Optional[uuid.UUID] = None,
-    candidat_id: Optional[uuid.UUID] = None
+    entreprise_id: uuid.UUID | None = None,
+    candidat_id: uuid.UUID | None = None
 ) -> Candidature:
     """Récupère une candidature avec vérification des droits."""
     query = db.query(Candidature)
-    
+
     if entreprise_id:
         query = query.join(Offre).join(Campagne).filter(
             Campagne.entreprise_id == entreprise_id,
@@ -65,12 +63,12 @@ def _get_candidature_or_404(
         )
     elif candidat_id:
         query = query.filter(Candidature.candidat_id == candidat_id)
-    
+
     candidature = query.filter(
         Candidature.id == candidature_id,
         Candidature.deleted_at.is_(None)  # Soft delete
     ).first()
-    
+
     if candidature is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Candidature introuvable.")
     return candidature
@@ -92,14 +90,13 @@ def _check_recruteur_or_admin(user: Utilisateur) -> None:
 @router.post("", status_code=status.HTTP_201_CREATED)
 def postuler(
     offre_id: uuid.UUID = Form(...),
-    lettre_motivation: Optional[str] = Form(None),
+    lettre_motivation: str | None = Form(None),
     champs_personnalises: str = Form("{}"),
     cv: UploadFile = File(...),
     db: Session = Depends(get_db),
     candidat: Candidat = Depends(get_current_candidat),
 ):
-    """
-    Postuler à une offre avec upload de CV.
+    """Postuler à une offre avec upload de CV.
     
     **Champs :**
     - `offre_id` : ID de l'offre (requis)
@@ -111,22 +108,22 @@ def postuler(
     offre = db.get(Offre, offre_id)
     if offre is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Offre introuvable.")
-    
+
     if offre.is_deleted:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Offre introuvable.")
-    
+
     if not offre.reception_ouverte:
         raise HTTPException(
             status.HTTP_409_CONFLICT,
             "Cette offre n'accepte plus de candidatures."
         )
-    
+
     if not offre.est_publiee:
         raise HTTPException(
             status.HTTP_400_BAD_REQUEST,
             "Cette offre n'est pas publiée."
         )
-    
+
     # Vérifier que le candidat n'a pas déjà postulé
     existing = (
         db.query(Candidature)
@@ -167,7 +164,7 @@ def postuler(
                         status.HTTP_403_FORBIDDEN,
                         "Cette offre a atteint son nombre maximum de candidatures."
                     )
-    
+
     # Valider les champs personnalisés
     try:
         champs = json.loads(champs_personnalises)
@@ -176,27 +173,27 @@ def postuler(
             status.HTTP_400_BAD_REQUEST,
             "Format champs_personnalises invalide."
         ) from None
-    
+
     if offre.champs_personnalises_def:
         try:
             validate_custom_fields(champs, offre.champs_personnalises_def)
         except ValueError as e:
             raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, str(e)) from e
-    
+
     # Valider et sauvegarder le CV
     try:
         content = cv.file.read()
         file_info = validate_file_upload(cv.filename or "unknown", content)
     except ValueError as e:
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, str(e)) from e
-    
+
     # Sauvegarder le fichier
     filename = f"{uuid.uuid4()}{file_info['extension']}"
     file_path = UPLOAD_DIR / filename
-    
+
     with open(file_path, "wb") as buffer:
         buffer.write(content)
-    
+
     # Créer la candidature
     candidature = Candidature(
         offre_id=offre_id,
@@ -205,11 +202,11 @@ def postuler(
         champs_personnalises=champs,
         cv_url=str(file_path),
     )
-    
+
     db.add(candidature)
     db.commit()
     db.refresh(candidature)
-    
+
     return success(
         CandidatureResponse.model_validate(candidature),
         "Candidature soumise avec succès."
@@ -219,7 +216,7 @@ def postuler(
 @router.get("/me")
 def mes_candidatures(
     candidat: Candidat = Depends(get_current_candidat),
-    statut: Optional[str] = Query(None, description="Filtrer par statut"),
+    statut: str | None = Query(None, description="Filtrer par statut"),
     db: Session = Depends(get_db),
 ):
     """Liste toutes les candidatures du candidat connecté."""
@@ -227,10 +224,10 @@ def mes_candidatures(
         Candidature.candidat_id == candidat.id,
         Candidature.deleted_at.is_(None)
     )
-    
+
     if statut:
         query = query.filter(Candidature.statut == statut)
-    
+
     candidatures = query.order_by(Candidature.created_at.desc()).all()
     return success([CandidatureResponse.model_validate(c) for c in candidatures])
 
@@ -255,12 +252,12 @@ def get_candidature(
 def candidatures_offre(
     offre_id: uuid.UUID,
     user: Utilisateur = Depends(get_current_user),
-    statut: Optional[str] = Query(None, description="Filtrer par statut"),
+    statut: str | None = Query(None, description="Filtrer par statut"),
     db: Session = Depends(get_db),
 ):
     """Liste toutes les candidatures d'une offre."""
     _check_recruteur_or_admin(user)
-    
+
     # Vérifier que l'offre appartient à l'entreprise
     offre = (
         db.query(Offre)
@@ -274,15 +271,15 @@ def candidatures_offre(
     )
     if offre is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Offre introuvable.")
-    
+
     query = db.query(Candidature).filter(
         Candidature.offre_id == offre_id,
         Candidature.deleted_at.is_(None)
     )
-    
+
     if statut:
         query = query.filter(Candidature.statut == statut)
-    
+
     candidatures = query.order_by(Candidature.date_soumission.desc()).all()
     return success([CandidatureResponse.model_validate(c) for c in candidatures])
 
@@ -295,7 +292,7 @@ def list_by_candidat(
 ):
     """Liste toutes les candidatures d'un candidat (accès recruteur/admin RH)."""
     _check_recruteur_or_admin(user)
-    
+
     # Vérifier que le candidat a postulé à des offres de l'entreprise
     query = (
         db.query(Candidature)
@@ -307,7 +304,7 @@ def list_by_candidat(
             Candidature.deleted_at.is_(None)
         )
     )
-    
+
     candidatures = query.order_by(Candidature.created_at.desc()).all()
     return success([CandidatureResponse.model_validate(c) for c in candidatures])
 
@@ -323,19 +320,18 @@ def update_statut_candidature(
     user: Utilisateur = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """
-    Met à jour le statut d'une candidature (pipeline Kanban).
+    """Met à jour le statut d'une candidature (pipeline Kanban).
     
     **Permissions :** Recruteur ou Admin RH.
     """
     _check_recruteur_or_admin(user)
     candidature = _get_candidature_or_404(db, candidature_id, user.entreprise_id)
-    
+
     # Mettre à jour le statut
     candidature.changer_statut(payload.statut, payload.commentaires)
     db.commit()
     db.refresh(candidature)
-    
+
     return success(
         CandidatureResponse.model_validate(candidature),
         f"Statut mis à jour : {payload.statut.value}"
@@ -349,26 +345,25 @@ def update_candidature(
     user: Utilisateur = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """
-    Met à jour complète une candidature (statut, commentaires, évaluations).
+    """Met à jour complète une candidature (statut, commentaires, évaluations).
     
     **Permissions :** Recruteur ou Admin RH.
     """
     _check_recruteur_or_admin(user)
     candidature = _get_candidature_or_404(db, candidature_id, user.entreprise_id)
-    
+
     if payload.statut:
         candidature.changer_statut(payload.statut, payload.commentaires)
-    
+
     if payload.evaluation_technique:
         candidature.evaluation_technique = payload.evaluation_technique
-    
+
     if payload.entretien_notes:
         candidature.entretien_notes = payload.entretien_notes
-    
+
     db.commit()
     db.refresh(candidature)
-    
+
     return success(
         CandidatureResponse.model_validate(candidature),
         "Candidature mise à jour avec succès."
@@ -381,13 +376,12 @@ def bulk_update_statut(
     user: Utilisateur = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """
-    Met à jour le statut de plusieurs candidatures en une fois.
+    """Met à jour le statut de plusieurs candidatures en une fois.
     
     **Permissions :** Recruteur ou Admin RH.
     """
     _check_recruteur_or_admin(user)
-    
+
     # Récupérer toutes les candidatures
     candidatures = (
         db.query(Candidature)
@@ -400,19 +394,19 @@ def bulk_update_statut(
         )
         .all()
     )
-    
+
     if len(candidatures) != len(payload.candidature_ids):
         raise HTTPException(
             status.HTTP_404_NOT_FOUND,
             "Certaines candidatures sont introuvables."
         )
-    
+
     # Mettre à jour
     for candidature in candidatures:
         candidature.changer_statut(payload.statut, payload.commentaires)
-    
+
     db.commit()
-    
+
     return success(
         message=f"{len(candidatures)} candidatures mises à jour."
     )

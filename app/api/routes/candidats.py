@@ -32,8 +32,7 @@ router = APIRouter(prefix="/candidats", tags=["candidats"])
 
 @router.get("/me")
 def mon_profil(candidat: Candidat = Depends(get_current_candidat)):
-    """
-    Récupère le profil du candidat connecté.
+    """Récupère le profil du candidat connecté.
     
     **Accessible uniquement aux comptes candidat.**
     """
@@ -46,8 +45,7 @@ def modifier_mon_profil(
     candidat: Candidat = Depends(get_current_candidat),
     db: Session = Depends(get_db),
 ):
-    """
-    Modifie le profil du candidat connecté.
+    """Modifie le profil du candidat connecté.
     
     **Champs modifiables :**
     - nom, téléphone, titre, expérience, localisation
@@ -58,7 +56,7 @@ def modifier_mon_profil(
     """
     for champ, valeur in payload.model_dump(exclude_unset=True).items():
         setattr(candidat, champ, valeur)
-    
+
     db.commit()
     db.refresh(candidat)
     return success(
@@ -73,8 +71,7 @@ def changer_mon_mot_de_passe(
     candidat: Candidat = Depends(get_current_candidat),
     db: Session = Depends(get_db),
 ):
-    """
-    Change le mot de passe du candidat connecté.
+    """Change le mot de passe du candidat connecté.
     
     **Nécessite :** L'ancien mot de passe pour confirmation.
     """
@@ -85,7 +82,7 @@ def changer_mon_mot_de_passe(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Mot de passe actuel incorrect."
         )
-    
+
     candidat.mot_de_passe_hash = hash_password(payload.nouveau_mot_de_passe)
     db.commit()
     return success(message="Mot de passe mis à jour avec succès.")
@@ -101,8 +98,7 @@ async def uploader_cv(
     candidat: Candidat = Depends(get_current_candidat),
     db: Session = Depends(get_db),
 ):
-    """
-    Ajoute ou remplace le CV du candidat connecté.
+    """Ajoute ou remplace le CV du candidat connecté.
     
     **Formats acceptés :** PDF, DOC, DOCX
     **Taille maximale :** 5 Mo (configurable)
@@ -135,7 +131,7 @@ async def uploader_cv(
     candidat.cv_url = f"/static/cv/{nom_fichier}"
     db.commit()
     db.refresh(candidat)
-    
+
     return success(
         CandidatResponse.model_validate(candidat),
         f"CV enregistré avec succès ({file_info['extension']}, {file_info['size'] // 1024} KB)."
@@ -146,8 +142,7 @@ async def uploader_cv(
 def obtenir_cv(
     candidat: Candidat = Depends(get_current_candidat),
 ):
-    """
-    Récupère l'URL du CV du candidat connecté.
+    """Récupère l'URL du CV du candidat connecté.
     
     **Retourne :** L'URL du CV ou `null` si aucun CV n'est uploadé.
     """
@@ -162,8 +157,7 @@ def supprimer_cv(
     candidat: Candidat = Depends(get_current_candidat),
     db: Session = Depends(get_db),
 ):
-    """
-    Supprime le CV du candidat connecté.
+    """Supprime le CV du candidat connecté.
     """
     if candidat.cv_url:
         ancien = Path(settings.cv_upload_dir) / Path(candidat.cv_url).name
@@ -171,7 +165,7 @@ def supprimer_cv(
         candidat.cv_url = None
         db.commit()
         db.refresh(candidat)
-    
+
     return success(message="CV supprimé avec succès.")
 
 
@@ -184,8 +178,7 @@ def stats_candidat(
     candidat: Candidat = Depends(get_current_candidat),
     db: Session = Depends(get_db),
 ):
-    """
-    Statistiques du candidat connecté.
+    """Statistiques du candidat connecté.
     
     **Statistiques retournées :**
     - Nombre total de candidatures
@@ -194,10 +187,10 @@ def stats_candidat(
     - Profil complété
     """
     from collections import Counter
-    
+
     # Compter les candidatures par statut
     stats_par_statut = Counter(c.statut.value for c in candidat.candidatures if not c.is_deleted)
-    
+
     # Dernière candidature
     derniere_candidature = None
     if candidat.candidatures:
@@ -208,7 +201,7 @@ def stats_candidat(
             "date": derniere.created_at,
             "offre_titre": derniere.offre.titre if derniere.offre else None
         }
-    
+
     # Vérifier si le profil est complet
     profil_complet = all([
         candidat.nom,
@@ -217,7 +210,7 @@ def stats_candidat(
         candidat.annees_experience is not None,
         candidat.localisation,
     ])
-    
+
     stats = {
         "nombre_candidatures": candidat.nombre_candidatures,
         "stats_par_statut": dict(stats_par_statut),
@@ -226,5 +219,5 @@ def stats_candidat(
         "a_upload_cv": candidat.a_upload_cv,
         "email_verifie": candidat.email_verifie,
     }
-    
+
     return success(stats)

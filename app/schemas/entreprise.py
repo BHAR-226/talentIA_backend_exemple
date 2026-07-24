@@ -2,7 +2,6 @@
 
 import uuid
 from datetime import datetime
-from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -11,53 +10,53 @@ from app.core.enums import StatutEntreprise
 
 class EntrepriseCreate(BaseModel):
     """Schéma pour la création d'une entreprise."""
-    
+
     nom: str = Field(
         min_length=2,
         max_length=100,
         description="Nom de l'entreprise"
     )
-    domaine: Optional[str] = Field(
+    domaine: str | None = Field(
         default=None,
         max_length=100,
         description="Domaine d'activité"
     )
-    secteur: Optional[str] = Field(
+    secteur: str | None = Field(
         default=None,
         max_length=100,
         description="Secteur d'activité"
     )
-    taille: Optional[str] = Field(
+    taille: str | None = Field(
         default=None,
         max_length=50,
         description="Taille de l'entreprise (ex: PME, Grand Groupe)"
     )
-    adresse: Optional[str] = Field(
+    adresse: str | None = Field(
         default=None,
         max_length=500,
         description="Adresse de l'entreprise"
     )
-    logo_url: Optional[str] = Field(
+    logo_url: str | None = Field(
         default=None,
         max_length=500,
         description="URL du logo"
     )
-    site_web: Optional[str] = Field(
+    site_web: str | None = Field(
         default=None,
         max_length=255,
         description="Site web de l'entreprise"
     )
-    telephone: Optional[str] = Field(
+    telephone: str | None = Field(
         default=None,
         max_length=50,
         description="Numéro de téléphone"
     )
-    description: Optional[str] = Field(
+    description: str | None = Field(
         default=None,
         max_length=1000,
         description="Description de l'entreprise"
     )
-    
+
     @field_validator('nom')
     @classmethod
     def validate_nom(cls, v: str) -> str:
@@ -68,61 +67,60 @@ class EntrepriseCreate(BaseModel):
 
 
 class EntrepriseUpdate(BaseModel):
-    """
-    Schéma pour la mise à jour partielle d'une entreprise.
+    """Schéma pour la mise à jour partielle d'une entreprise.
     Tous les champs sont optionnels (PATCH-like).
     """
-    
-    nom: Optional[str] = Field(
+
+    nom: str | None = Field(
         default=None,
         min_length=2,
         max_length=100,
         description="Nom de l'entreprise"
     )
-    domaine: Optional[str] = Field(
+    domaine: str | None = Field(
         default=None,
         max_length=100,
         description="Domaine d'activité"
     )
-    secteur: Optional[str] = Field(
+    secteur: str | None = Field(
         default=None,
         max_length=100,
         description="Secteur d'activité"
     )
-    taille: Optional[str] = Field(
+    taille: str | None = Field(
         default=None,
         max_length=50,
         description="Taille de l'entreprise"
     )
-    adresse: Optional[str] = Field(
+    adresse: str | None = Field(
         default=None,
         max_length=500,
         description="Adresse de l'entreprise"
     )
-    logo_url: Optional[str] = Field(
+    logo_url: str | None = Field(
         default=None,
         max_length=500,
         description="URL du logo"
     )
-    site_web: Optional[str] = Field(
+    site_web: str | None = Field(
         default=None,
         max_length=255,
         description="Site web de l'entreprise"
     )
-    telephone: Optional[str] = Field(
+    telephone: str | None = Field(
         default=None,
         max_length=50,
         description="Numéro de téléphone"
     )
-    description: Optional[str] = Field(
+    description: str | None = Field(
         default=None,
         max_length=1000,
         description="Description de l'entreprise"
     )
-    
+
     @field_validator('nom')
     @classmethod
-    def validate_nom(cls, v: Optional[str]) -> Optional[str]:
+    def validate_nom(cls, v: str | None) -> str | None:
         """Valide et formate le nom de l'entreprise."""
         if v is not None:
             if not v.strip():
@@ -133,7 +131,7 @@ class EntrepriseUpdate(BaseModel):
 
 class SuspendreEntrepriseRequest(BaseModel):
     """Requête pour suspendre une entreprise."""
-    
+
     motif: str = Field(
         min_length=1,
         max_length=500,
@@ -143,44 +141,44 @@ class SuspendreEntrepriseRequest(BaseModel):
 
 class EntrepriseResponse(BaseModel):
     """Réponse complète d'une entreprise."""
-    
+
     model_config = ConfigDict(from_attributes=True)
-    
+
     # Identifiants
     id: uuid.UUID = Field(description="ID unique de l'entreprise")
-    
+
     # Informations générales
     nom: str = Field(description="Nom de l'entreprise")
-    domaine: Optional[str] = Field(default=None, description="Domaine d'activité")
-    secteur: Optional[str] = Field(default=None, description="Secteur d'activité")
-    taille: Optional[str] = Field(default=None, description="Taille de l'entreprise")
-    adresse: Optional[str] = Field(default=None, description="Adresse de l'entreprise")
-    logo_url: Optional[str] = Field(default=None, description="URL du logo")
-    
+    domaine: str | None = Field(default=None, description="Domaine d'activité")
+    secteur: str | None = Field(default=None, description="Secteur d'activité")
+    taille: str | None = Field(default=None, description="Taille de l'entreprise")
+    adresse: str | None = Field(default=None, description="Adresse de l'entreprise")
+    logo_url: str | None = Field(default=None, description="URL du logo")
+
     # Contact
-    site_web: Optional[str] = Field(default=None, description="Site web de l'entreprise")
-    telephone: Optional[str] = Field(default=None, description="Numéro de téléphone")
-    description: Optional[str] = Field(default=None, description="Description de l'entreprise")
-    
+    site_web: str | None = Field(default=None, description="Site web de l'entreprise")
+    telephone: str | None = Field(default=None, description="Numéro de téléphone")
+    description: str | None = Field(default=None, description="Description de l'entreprise")
+
     # Statut
     statut: StatutEntreprise = Field(
         default=StatutEntreprise.active,
         description="Statut de l'entreprise"
     )
-    motif_suspension: Optional[str] = Field(
+    motif_suspension: str | None = Field(
         default=None,
         description="Motif de la suspension (si applicable)"
     )
-    
+
     # Métadonnées
     created_at: datetime = Field(description="Date de création")
     updated_at: datetime = Field(description="Date de dernière modification")
-    
+
     @property
     def est_active(self) -> bool:
         """Vérifie si l'entreprise est active."""
         return self.statut == StatutEntreprise.active
-    
+
     @property
     def est_suspendue(self) -> bool:
         """Vérifie si l'entreprise est suspendue."""

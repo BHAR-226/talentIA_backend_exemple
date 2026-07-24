@@ -1,7 +1,6 @@
 """Routes API pour la gestion des Offres d'emploi (CDC §7)."""
 
 import uuid
-from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
@@ -107,14 +106,13 @@ def _check_admin_rh(user: Utilisateur) -> None:
 @router.get("")
 def lister_offres(
     user: Utilisateur = Depends(get_current_user),
-    statut: Optional[str] = Query(None, description="Filtrer par statut (brouillon, publiee, archivee)"),
-    campagne_id: Optional[uuid.UUID] = Query(None, description="Filtrer par campagne"),
-    search: Optional[str] = Query(None, description="Rechercher par titre"),
-    visible: Optional[bool] = Query(None, description="Filtrer par visibilité"),
+    statut: str | None = Query(None, description="Filtrer par statut (brouillon, publiee, archivee)"),
+    campagne_id: uuid.UUID | None = Query(None, description="Filtrer par campagne"),
+    search: str | None = Query(None, description="Rechercher par titre"),
+    visible: bool | None = Query(None, description="Filtrer par visibilité"),
     db: Session = Depends(get_db),
 ):
-    """
-    Liste toutes les offres de l'entreprise.
+    """Liste toutes les offres de l'entreprise.
     
     **Filtres disponibles :**
     - `statut` : Filtrer par statut (brouillon, publiee, archivee)
@@ -131,19 +129,19 @@ def lister_offres(
             Offre.deleted_at.is_(None)
         )
     )
-    
+
     if statut:
         query = query.filter(Offre.statut == statut)
-    
+
     if campagne_id:
         query = query.filter(Offre.campagne_id == campagne_id)
-    
+
     if search:
         query = query.filter(Offre.titre.ilike(f"%{search}%"))
-    
+
     if visible is not None:
         query = query.filter(Offre.visible == visible)
-    
+
     offres = query.order_by(Offre.created_at.desc()).all()
     return success([OffreResponse.model_validate(o) for o in offres])
 
@@ -154,13 +152,12 @@ def creer_offre(
     user: Utilisateur = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """
-    Crée une nouvelle offre d'emploi.
+    """Crée une nouvelle offre d'emploi.
     
     **Permissions :** Recruteur ou Admin RH.
     """
     _check_recruteur_or_admin(user)
-    
+
     # Vérifier que la campagne existe et appartient à l'entreprise
     campagne = (
         db.query(Campagne)
@@ -176,14 +173,14 @@ def creer_offre(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Campagne associée non trouvée."
         )
-    
+
     # Vérifier que la campagne n'est pas terminée
     if campagne.est_terminee:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Impossible de créer une offre dans une campagne terminée."
         )
-    
+
     offre = Offre(
         campagne_id=payload.campagne_id,
         createur_id=user.id,
@@ -201,11 +198,11 @@ def creer_offre(
         visible=payload.visible,
         statut=StatutOffre.brouillon,
     )
-    
+
     db.add(offre)
     db.commit()
     db.refresh(offre)
-    
+
     return success(
         OffreResponse.model_validate(offre),
         "Offre créée avec succès."
@@ -230,28 +227,27 @@ def update_offre(
     user: Utilisateur = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """
-    Met à jour une offre existante.
+    """Met à jour une offre existante.
     
     **Permissions :** Recruteur ou Admin RH.
     **Restriction :** Une offre publiée ou archivée ne peut être modifiée que par un admin RH.
     """
     _check_recruteur_or_admin(user)
     offre = _get_offre_or_404(db, offre_id, user.entreprise_id)
-    
+
     # Ne pas modifier une offre publiée ou archivée (sauf admin RH)
     if offre.statut != StatutOffre.brouillon and user.role != RoleUtilisateur.admin_rh:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Impossible de modifier une offre publiée ou archivée."
         )
-    
+
     for champ, valeur in payload.model_dump(exclude_unset=True).items():
         setattr(offre, champ, valeur)
-    
+
     db.commit()
     db.refresh(offre)
-    
+
     return success(
         OffreResponse.model_validate(offre),
         "Offre mise à jour avec succès."
@@ -268,14 +264,13 @@ def publier_offre(
     user: Utilisateur = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """
-    Publie une offre (la rend visible aux candidats).
+    """Publie une offre (la rend visible aux candidats).
     
     **Permissions :** Recruteur ou Admin RH.
     """
     _check_recruteur_or_admin(user)
     offre = _get_offre_or_404(db, offre_id, user.entreprise_id)
-    
+
     if offre.est_publiee:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -287,7 +282,7 @@ def publier_offre(
     offre.publier()
     db.commit()
     db.refresh(offre)
-    
+
     return success(
         OffreResponse.model_validate(offre),
         "Offre publiée avec succès."
@@ -300,24 +295,23 @@ def archiver_offre(
     user: Utilisateur = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """
-    Archive une offre.
+    """Archive une offre.
     
     **Permissions :** Recruteur ou Admin RH.
     """
     _check_recruteur_or_admin(user)
     offre = _get_offre_or_404(db, offre_id, user.entreprise_id)
-    
+
     if offre.est_archivee:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Cette offre est déjà archivée."
         )
-    
+
     offre.archiver()
     db.commit()
     db.refresh(offre)
-    
+
     return success(
         OffreResponse.model_validate(offre),
         "Offre archivée avec succès."
@@ -331,25 +325,24 @@ def toggle_reception_offre(
     user: Utilisateur = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """
-    Active ou désactive la réception des candidatures (bouton Arrêter/Rouvrir).
+    """Active ou désactive la réception des candidatures (bouton Arrêter/Rouvrir).
     
     **Permissions :** Recruteur ou Admin RH.
     """
     _check_recruteur_or_admin(user)
     offre = _get_offre_or_404(db, offre_id, user.entreprise_id)
-    
+
     # Vérifier que l'offre est publiée
     if not offre.est_publiee:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Seules les offres publiées peuvent accepter des candidatures."
         )
-    
+
     offre.reception_ouverte = payload.reception_ouverte
     db.commit()
     db.refresh(offre)
-    
+
     message = "Réception des candidatures ouverte." if payload.reception_ouverte else "Réception des candidatures arrêtée."
     return success(OffreResponse.model_validate(offre), message)
 
@@ -360,19 +353,18 @@ def dupliquer_offre(
     user: Utilisateur = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """
-    Duplique une offre (crée une copie en brouillon).
+    """Duplique une offre (crée une copie en brouillon).
     
     **Permissions :** Recruteur ou Admin RH.
     """
     _check_recruteur_or_admin(user)
     offre = _get_offre_or_404(db, offre_id, user.entreprise_id)
-    
+
     nouvelle_offre = offre.dupliquer()
     db.add(nouvelle_offre)
     db.commit()
     db.refresh(nouvelle_offre)
-    
+
     return success(
         OffreResponse.model_validate(nouvelle_offre),
         "Offre dupliquée avec succès."
@@ -389,14 +381,13 @@ def delete_offre(
     user: Utilisateur = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """
-    Supprime une offre (uniquement si elle n'a pas de candidatures).
+    """Supprime une offre (uniquement si elle n'a pas de candidatures).
     
     **Permissions :** Admin RH uniquement.
     """
     _check_admin_rh(user)
     offre = _get_offre_or_404(db, offre_id, user.entreprise_id)
-    
+
     # Vérifier qu'il n'y a pas de candidatures
     candidatures_count = sum(1 for c in offre.candidatures if not c.is_deleted)
     if candidatures_count > 0:
@@ -404,11 +395,11 @@ def delete_offre(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Impossible de supprimer une offre avec des candidatures."
         )
-    
+
     # Soft delete
     offre.soft_delete(user.id)
     db.commit()
-    
+
     return success(message="Offre supprimée avec succès.")
 
 
@@ -422,8 +413,7 @@ def stats_offre(
     user: Utilisateur = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """
-    Statistiques détaillées d'une offre.
+    """Statistiques détaillées d'une offre.
     
     **Statistiques retournées :**
     - Nombre total de candidatures
@@ -433,14 +423,14 @@ def stats_offre(
     - Nombre de candidatures analysées
     """
     offre = _get_offre_or_404(db, offre_id, user.entreprise_id)
-    
+
     # Compter les candidatures par statut
     stats_par_statut = {}
     for c in offre.candidatures:
         if not c.is_deleted:
             statut = c.statut.value
             stats_par_statut[statut] = stats_par_statut.get(statut, 0) + 1
-    
+
     stats = {
         "id": str(offre.id),
         "titre": offre.titre,
@@ -456,5 +446,5 @@ def stats_offre(
         "date_publication": offre.date_publication,
         "reception_ouverte": offre.reception_ouverte,
     }
-    
+
     return success(stats)

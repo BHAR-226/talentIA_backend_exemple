@@ -1,7 +1,8 @@
 """Pose et efface le cookie de session (httpOnly). Le JWT ne transite jamais
-par le corps de réponse ni par le stockage JS — uniquement par ce cookie."""
+par le corps de réponse ni par le stockage JS — uniquement par ce cookie.
+"""
 
-from typing import Literal, Optional
+from typing import Literal
 
 from fastapi import Response
 
@@ -14,11 +15,10 @@ SameSite = Literal["lax", "strict", "none"]
 def set_auth_cookie(
     response: Response,
     token: str,
-    max_age: Optional[int] = None,
+    max_age: int | None = None,
     path: str = "/",
 ) -> None:
-    """
-    Dépose le cookie de session httpOnly contenant le JWT.
+    """Dépose le cookie de session httpOnly contenant le JWT.
 
     Args:
         response: L'objet Response FastAPI
@@ -44,8 +44,7 @@ def clear_auth_cookie(
     response: Response,
     path: str = "/",
 ) -> None:
-    """
-    Supprime le cookie de session.
+    """Supprime le cookie de session.
 
     Args:
         response: L'objet Response FastAPI
@@ -63,10 +62,9 @@ def clear_auth_cookie(
 def refresh_auth_cookie(
     response: Response,
     token: str,
-    max_age: Optional[int] = None,
+    max_age: int | None = None,
 ) -> None:
-    """
-    Rafraîchit le cookie de session avec un nouveau token.
+    """Rafraîchit le cookie de session avec un nouveau token.
 
     Utile pour prolonger la durée de session lors d'activité.
 
@@ -82,8 +80,7 @@ def refresh_auth_cookie(
 
 
 def get_auth_cookie_config() -> dict:
-    """
-    Retourne la configuration du cookie de session.
+    """Retourne la configuration du cookie de session.
 
     Returns:
         dict: Configuration du cookie (key, httponly, secure, samesite)

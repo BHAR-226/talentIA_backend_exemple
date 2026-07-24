@@ -1,5 +1,4 @@
-"""
-Conventions de réponse et gestion d'erreurs unifiées.
+"""Conventions de réponse et gestion d'erreurs unifiées.
 
 Toutes les réponses suivent une enveloppe commune :
 
@@ -24,7 +23,7 @@ Les handlers ci-dessous appliquent ce format aux exceptions HTTP
 et aux erreurs de validation, pour un contrat homogène côté frontend.
 """
 
-from typing import Any, Generic, Optional, TypeVar
+from typing import Any, Generic, TypeVar
 
 from fastapi import Request, status
 from fastapi.encoders import jsonable_encoder
@@ -41,8 +40,7 @@ T = TypeVar("T")
 # ==========================================================
 
 class APIResponse(BaseModel, Generic[T]):
-    """
-    Enveloppe standard des réponses API.
+    """Enveloppe standard des réponses API.
 
     Exemple :
     {
@@ -53,8 +51,8 @@ class APIResponse(BaseModel, Generic[T]):
     """
 
     success: bool
-    message: Optional[str] = None
-    data: Optional[T] = None
+    message: str | None = None
+    data: T | None = None
 
     class Config:
         json_schema_extra = {
@@ -69,9 +67,9 @@ class APIResponse(BaseModel, Generic[T]):
 class APIError(BaseModel):
     """Modèle d'erreur standardisé."""
 
-    code: Optional[int] = None
+    code: int | None = None
     message: str
-    details: Optional[Any] = None
+    details: Any | None = None
 
     class Config:
         json_schema_extra = {
@@ -108,10 +106,9 @@ class APIErrorResponse(BaseModel):
 
 def success(
     data: Any = None,
-    message: Optional[str] = None,
+    message: str | None = None,
 ) -> dict[str, Any]:
-    """
-    Retourne une réponse succès standardisée.
+    """Retourne une réponse succès standardisée.
 
     Args:
         data: Données à retourner (optionnel)
@@ -133,11 +130,10 @@ def success(
 
 def error_payload(
     message: str,
-    code: Optional[int] = None,
+    code: int | None = None,
     details: Any = None,
 ) -> dict[str, Any]:
-    """
-    Retourne une réponse erreur standardisée.
+    """Retourne une réponse erreur standardisée.
 
     Args:
         message: Message d'erreur
@@ -166,10 +162,9 @@ def paginated_response(
     total: int,
     page: int,
     per_page: int,
-    message: Optional[str] = None,
+    message: str | None = None,
 ) -> dict[str, Any]:
-    """
-    Retourne une réponse paginée standardisée.
+    """Retourne une réponse paginée standardisée.
 
     Args:
         items: Liste des éléments de la page
@@ -222,8 +217,7 @@ async def http_exception_handler(
     request: Request,
     exc: StarletteHTTPException,
 ) -> JSONResponse:
-    """
-    Handler pour les exceptions HTTP standardisées.
+    """Handler pour les exceptions HTTP standardisées.
 
     Args:
         request: Requête FastAPI
@@ -245,8 +239,7 @@ async def validation_exception_handler(
     request: Request,
     exc: RequestValidationError,
 ) -> JSONResponse:
-    """
-    Handler pour les erreurs de validation Pydantic.
+    """Handler pour les erreurs de validation Pydantic.
 
     Args:
         request: Requête FastAPI
@@ -269,8 +262,7 @@ async def generic_exception_handler(
     request: Request,
     exc: Exception,
 ) -> JSONResponse:
-    """
-    Handler pour les exceptions non gérées.
+    """Handler pour les exceptions non gérées.
 
     Args:
         request: Requête FastAPI
@@ -299,8 +291,7 @@ async def generic_exception_handler(
 # ==========================================================
 
 def is_success_response(response: dict) -> bool:
-    """
-    Vérifie si une réponse est un succès.
+    """Vérifie si une réponse est un succès.
 
     Args:
         response: Réponse à vérifier
@@ -312,8 +303,7 @@ def is_success_response(response: dict) -> bool:
 
 
 def get_response_data(response: dict) -> Any:
-    """
-    Extrait les données d'une réponse.
+    """Extrait les données d'une réponse.
 
     Args:
         response: Réponse à extraire
@@ -324,9 +314,8 @@ def get_response_data(response: dict) -> Any:
     return response.get("data")
 
 
-def get_response_message(response: dict) -> Optional[str]:
-    """
-    Extrait le message d'une réponse.
+def get_response_message(response: dict) -> str | None:
+    """Extrait le message d'une réponse.
 
     Args:
         response: Réponse à extraire
@@ -337,9 +326,8 @@ def get_response_message(response: dict) -> Optional[str]:
     return response.get("message")
 
 
-def get_error_message(response: dict) -> Optional[str]:
-    """
-    Extrait le message d'erreur d'une réponse.
+def get_error_message(response: dict) -> str | None:
+    """Extrait le message d'erreur d'une réponse.
 
     Args:
         response: Réponse à extraire
@@ -353,9 +341,8 @@ def get_error_message(response: dict) -> Optional[str]:
     return None
 
 
-def get_error_code(response: dict) -> Optional[int]:
-    """
-    Extrait le code d'erreur d'une réponse.
+def get_error_code(response: dict) -> int | None:
+    """Extrait le code d'erreur d'une réponse.
 
     Args:
         response: Réponse à extraire

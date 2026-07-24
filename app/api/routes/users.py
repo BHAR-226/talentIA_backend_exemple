@@ -119,8 +119,7 @@ def modifier_mon_profil(
     user: Utilisateur = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """
-    Édite son propre profil (nom, email, téléphone, fonction).
+    """Édite son propre profil (nom, email, téléphone, fonction).
     
     **Restrictions :** 
     - Ne peut pas modifier son rôle
@@ -128,7 +127,7 @@ def modifier_mon_profil(
     - Changer d'email redemande une vérification
     """
     donnees = payload.model_dump(exclude_unset=True)
-    
+
     # Vérifier le changement d'email
     if "email" in donnees:
         _verifier_changement_email(user, donnees["email"], db)
@@ -157,7 +156,7 @@ def changer_mon_mot_de_passe(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Mot de passe actuel incorrect."
         )
-    
+
     user.mot_de_passe_hash = hash_password(payload.nouveau_mot_de_passe)
     db.commit()
     return success(message="Mot de passe mis à jour avec succès.")
@@ -172,8 +171,7 @@ def lister_utilisateurs(
     admin: Utilisateur = Depends(_require_admin_rh),
     db: Session = Depends(get_db),
 ):
-    """
-    Liste tous les membres de l'équipe (entreprise de l'admin RH).
+    """Liste tous les membres de l'équipe (entreprise de l'admin RH).
     
     **Permissions :** Admin RH uniquement.
     """
@@ -195,8 +193,7 @@ def creer_utilisateur(
     admin: Utilisateur = Depends(_require_admin_rh),
     db: Session = Depends(get_db),
 ):
-    """
-    Ajoute un membre à l'équipe (même entreprise que l'admin RH).
+    """Ajoute un membre à l'équipe (même entreprise que l'admin RH).
     
     Le compte est `actif` immédiatement, mais un email de confirmation est
     envoyé : la connexion reste bloquée tant que l'email n'est pas vérifié.
@@ -239,7 +236,7 @@ def creer_utilisateur(
                             "ajouter des recruteurs."
                         )
                     )
-    
+
     # Vérifier l'email
     if db.query(Utilisateur).filter(Utilisateur.email == payload.email).first():
         raise HTTPException(
@@ -265,7 +262,7 @@ def creer_utilisateur(
     # Envoyer email de vérification
     token = create_email_verification_token(str(membre.id), type_compte="utilisateur")
     envoyer_email_verification(membre.email, membre.nom, token)
-    
+
     # Audit log
     audit = AuditLog.create_log(
         table_name="utilisateurs",
@@ -283,7 +280,7 @@ def creer_utilisateur(
     )
     db.add(audit)
     db.commit()
-    
+
     return success(
         UtilisateurResponse.model_validate(membre),
         "Utilisateur créé. Un email de confirmation lui a été envoyé.",
@@ -296,8 +293,7 @@ def get_utilisateur(
     admin: Utilisateur = Depends(_require_admin_rh),
     db: Session = Depends(get_db),
 ):
-    """
-    Récupère un membre de l'équipe par son ID.
+    """Récupère un membre de l'équipe par son ID.
     
     **Permissions :** Admin RH uniquement.
     """
@@ -312,8 +308,7 @@ def update_utilisateur(
     admin: Utilisateur = Depends(_require_admin_rh),
     db: Session = Depends(get_db),
 ):
-    """
-    Édite un membre de l'équipe (nom, email, rôle, activation).
+    """Édite un membre de l'équipe (nom, email, rôle, activation).
     
     C'est ICI qu'un admin RH approuve un recruteur resté en attente
     après son inscription sur une entreprise existante (`actif: true`).
@@ -329,7 +324,7 @@ def update_utilisateur(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=f"Rôle non attribuable. Rôles autorisés : {', '.join(r.value for r in ROLES_ATTRIBUABLES)}"
         )
-    
+
     # Vérifier le changement d'email
     if "email" in donnees:
         _verifier_changement_email(membre, donnees["email"], db)
@@ -337,7 +332,7 @@ def update_utilisateur(
     # Vérifier les garde-fous
     desactivation = donnees.get("actif") is False
     retrogradation = "role" in donnees and donnees["role"] != RoleUtilisateur.admin_rh
-    
+
     if membre.id == admin.id:
         if desactivation:
             raise HTTPException(
@@ -362,7 +357,7 @@ def update_utilisateur(
 
     db.commit()
     db.refresh(membre)
-    
+
     # Audit log
     audit = AuditLog.create_log(
         table_name="utilisateurs",
@@ -374,7 +369,7 @@ def update_utilisateur(
     )
     db.add(audit)
     db.commit()
-    
+
     return success(
         UtilisateurResponse.model_validate(membre),
         "Utilisateur mis à jour avec succès."
@@ -387,8 +382,7 @@ def supprimer_utilisateur(
     admin: Utilisateur = Depends(_require_admin_rh),
     db: Session = Depends(get_db),
 ):
-    """
-    Supprime un membre de l'équipe (soft delete).
+    """Supprime un membre de l'équipe (soft delete).
     
     Pour un simple départ ou une suspension temporaire, préférer
     `PUT /users/{id}` avec `actif: false`.
@@ -403,7 +397,7 @@ def supprimer_utilisateur(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Impossible de supprimer son propre compte."
         )
-    
+
     if membre.role == RoleUtilisateur.admin_rh and _est_dernier_admin_rh_actif(
         db, admin.entreprise_id, exclure_id=membre.id
     ):
@@ -415,7 +409,7 @@ def supprimer_utilisateur(
     # Soft delete
     membre.soft_delete(admin.id)
     db.commit()
-    
+
     # Audit log
     audit = AuditLog.create_log(
         table_name="utilisateurs",
@@ -427,7 +421,7 @@ def supprimer_utilisateur(
     )
     db.add(audit)
     db.commit()
-    
+
     return success(message="Utilisateur supprimé avec succès.")
 
 
@@ -441,23 +435,22 @@ def promouvoir_admin_rh(
     admin: Utilisateur = Depends(_require_admin_rh),
     db: Session = Depends(get_db),
 ):
-    """
-    Promeut un utilisateur au rôle Admin RH.
+    """Promeut un utilisateur au rôle Admin RH.
     
     **Permissions :** Admin RH uniquement.
     """
     membre = _get_ou_404(db, admin.entreprise_id, user_id)
-    
+
     if membre.id == admin.id:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Vous êtes déjà Admin RH."
         )
-    
+
     membre.promouvoir_admin_rh()
     db.commit()
     db.refresh(membre)
-    
+
     return success(
         UtilisateurResponse.model_validate(membre),
         f"{membre.nom} promu Admin RH avec succès."
@@ -470,8 +463,7 @@ def promouvoir_recruteur(
     admin: Utilisateur = Depends(_require_admin_rh),
     db: Session = Depends(get_db),
 ):
-    """
-    Promeut un utilisateur au rôle Recruteur.
+    """Promeut un utilisateur au rôle Recruteur.
     
     **Permissions :** Admin RH uniquement.
     """
@@ -479,7 +471,7 @@ def promouvoir_recruteur(
     membre.promouvoir_recruteur()
     db.commit()
     db.refresh(membre)
-    
+
     return success(
         UtilisateurResponse.model_validate(membre),
         f"{membre.nom} promu Recruteur avec succès."
@@ -492,8 +484,7 @@ def promouvoir_evaluateur(
     admin: Utilisateur = Depends(_require_admin_rh),
     db: Session = Depends(get_db),
 ):
-    """
-    Promeut un utilisateur au rôle Évaluateur Technique.
+    """Promeut un utilisateur au rôle Évaluateur Technique.
     
     **Permissions :** Admin RH uniquement.
     """
@@ -501,7 +492,7 @@ def promouvoir_evaluateur(
     membre.promouvoir_evaluateur_technique()
     db.commit()
     db.refresh(membre)
-    
+
     return success(
         UtilisateurResponse.model_validate(membre),
         f"{membre.nom} promu Évaluateur Technique avec succès."

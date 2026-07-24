@@ -3,7 +3,7 @@
 import logging
 import time
 import uuid
-from typing import Callable
+from collections.abc import Callable
 
 from fastapi import Request
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -21,7 +21,7 @@ logger = logging.getLogger("talentia.middleware")
 
 class RequestLoggingMiddleware(BaseHTTPMiddleware):
     """Middleware pour logger les requêtes et mesurer les performances."""
-    
+
     # Routes à exclure du logging (pour réduire le bruit)
     EXCLUDED_PATHS = {
         "/health",
@@ -30,7 +30,7 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
         "/redoc",
         "/openapi.json",
     }
-    
+
     # Routes avec logging minimal
     MINIMAL_PATHS = {
         "/health",
@@ -42,12 +42,12 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
         path = request.url.path
         if path in self.EXCLUDED_PATHS:
             return await call_next(request)
-        
+
         request_id = str(uuid.uuid4())
         request.state.request_id = request_id
-        
+
         start_time = time.perf_counter()
-        
+
         # Log entrée (sauf pour les routes minimales)
         if path not in self.MINIMAL_PATHS:
             logger.info(
@@ -61,7 +61,7 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
                     'referer': request.headers.get('referer'),
                 }
             )
-        
+
         try:
             response = await call_next(request)
         except Exception as e:
@@ -74,10 +74,10 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
                 }
             )
             raise
-        
+
         duration = time.perf_counter() - start_time
         duration_ms = duration * 1000
-        
+
         # Log sortie (sauf pour les routes minimales)
         if path not in self.MINIMAL_PATHS:
             logger.info(
@@ -88,7 +88,7 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
                     'duration_ms': duration_ms,
                 }
             )
-        
+
         # Alerte pour les requêtes lentes
         if duration > 1.0:
             logger.warning(
@@ -101,11 +101,11 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
                     'status_code': response.status_code,
                 }
             )
-        
+
         # Ajouter les headers de traçabilité
         response.headers['X-Request-ID'] = request_id
         response.headers['X-Response-Time'] = f"{duration_ms:.2f}ms"
-        
+
         return response
 
 
@@ -115,7 +115,7 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
 
 class CacheInvalidationMiddleware(BaseHTTPMiddleware):
     """Middleware pour invalider le cache après les modifications."""
-    
+
     # Mapping des routes vers les patterns d'invalidation
     INVALIDATION_MAP = {
         "users": "user:*",
@@ -130,11 +130,11 @@ class CacheInvalidationMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
         # Exécuter la requête
         response = await call_next(request)
-        
+
         # Invalider le cache si méthode modificative
         if request.method in ("POST", "PUT", "PATCH", "DELETE"):
             await self._invalidate_cache(request)
-        
+
         return response
 
     async def _invalidate_cache(self, request: Request) -> None:
@@ -142,10 +142,10 @@ class CacheInvalidationMiddleware(BaseHTTPMiddleware):
         path_parts = request.url.path.split('/')
         if len(path_parts) > 1:
             resource = path_parts[1]  # users, offres, etc.
-            
+
             # Utiliser le mapping si disponible
             pattern = self.INVALIDATION_MAP.get(resource, f"*{resource}*")
-            
+
             # Invalider le cache
             deleted = await cache.invalidate_pattern(pattern)
             if deleted > 0:
@@ -158,16 +158,16 @@ class CacheInvalidationMiddleware(BaseHTTPMiddleware):
 
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
     """Middleware pour ajouter des en-têtes de sécurité."""
-    
+
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
         response = await call_next(request)
-        
+
         # Ajouter les en-têtes de sécurité
         response.headers['X-Content-Type-Options'] = 'nosniff'
         response.headers['X-Frame-Options'] = 'DENY'
         response.headers['X-XSS-Protection'] = '1; mode=block'
         response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
-        
+
         # CSP en production
         if settings.is_production:
             response.headers['Content-Security-Policy'] = (
@@ -179,7 +179,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
                 "connect-src 'self'; "
                 "frame-ancestors 'none';"
             )
-        
+
         return response
 
 
@@ -189,7 +189,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 
 class ErrorHandlingMiddleware(BaseHTTPMiddleware):
     """Middleware pour capturer et logger les erreurs non gérées."""
-    
+
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
         try:
             response = await call_next(request)
@@ -215,7 +215,7 @@ class ErrorHandlingMiddleware(BaseHTTPMiddleware):
 
 class MetricsMiddleware(BaseHTTPMiddleware):
     """Middleware pour collecter des métriques Prometheus."""
-    
+
     # Routes à exclure
     EXCLUDED_PATHS = {
         "/metrics",
@@ -224,21 +224,21 @@ class MetricsMiddleware(BaseHTTPMiddleware):
 
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
         path = request.url.path
-        
+
         # Exclure certaines routes
         if path in self.EXCLUDED_PATHS:
             return await call_next(request)
-        
+
         start = time.time()
         response = await call_next(request)
         duration = time.time() - start
-        
+
         # Log des métriques en production
         if settings.is_production:
             logger.debug(
                 f"📊 METRIC: {request.method} {path} {response.status_code} {duration:.3f}s"
             )
-        
+
         return response
 
 
@@ -256,12 +256,12 @@ class CompressionMiddleware(BaseHTTPMiddleware):
     compresser les octets, ce qui aurait cassé tout client essayant de
     décompresser la réponse).
     """
-    
+
     MIN_SIZE = 1024  # Taille minimum pour compresser (1KB)
 
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
         response = await call_next(request)
-        
+
         # Vérifier si la réponse peut être compressée
         if (
             response.status_code < 400 and
@@ -281,7 +281,7 @@ class CompressionMiddleware(BaseHTTPMiddleware):
                 headers=dict(response.headers),
                 media_type=response.media_type,
             )
-        
+
         return response
 
 
@@ -290,8 +290,7 @@ class CompressionMiddleware(BaseHTTPMiddleware):
 # ==========================================================
 
 def setup_middlewares(app) -> None:
-    """
-    Configure tous les middlewares pour l'application.
+    """Configure tous les middlewares pour l'application.
     
     Args:
         app: Instance FastAPI
@@ -303,7 +302,7 @@ def setup_middlewares(app) -> None:
     # 4. Logging
     # 5. Cache invalidation
     # 6. Erreurs
-    
+
     # D'abord les middlewares qui s'exécutent en premier (externe)
     app.add_middleware(CompressionMiddleware)
     app.add_middleware(SecurityHeadersMiddleware)

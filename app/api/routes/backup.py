@@ -44,8 +44,7 @@ def list_backups(
     admin = Depends(require_roles(RoleUtilisateur.admin_plateforme)),
     limit: int = Query(10, ge=1, le=100, description="Nombre maximum de sauvegardes à retourner")
 ):
-    """
-    Liste toutes les sauvegardes disponibles.
+    """Liste toutes les sauvegardes disponibles.
     
     **Permissions :** Admin plateforme uniquement.
     
@@ -53,16 +52,16 @@ def list_backups(
     - `limit` : Nombre maximum de sauvegardes à retourner (défaut: 10, max: 100)
     """
     backups = backup_manager.list_backups()
-    
+
     # Trier par date (plus récent en premier)
     backups = sorted(backups, key=lambda x: x['created_at'], reverse=True)
-    
+
     # Limiter le nombre
     if limit:
         backups = backups[:limit]
-    
+
     total_size = sum(b['size_mb'] for b in backups)
-    
+
     return {
         "success": True,
         "data": {
@@ -77,8 +76,7 @@ def list_backups(
 def create_backup(
     admin = Depends(require_roles(RoleUtilisateur.admin_plateforme))
 ):
-    """
-    Crée une nouvelle sauvegarde manuelle de la base de données.
+    """Crée une nouvelle sauvegarde manuelle de la base de données.
     
     **Permissions :** Admin plateforme uniquement.
     
@@ -87,7 +85,7 @@ def create_backup(
     """
     try:
         backup_path = backup_manager.create_backup(compress=True)
-        
+
         return {
             "success": True,
             "message": "Sauvegarde créée avec succès",
@@ -111,8 +109,7 @@ def restore_backup(
     confirm: bool = Query(False, description="Confirmation explicite pour la restauration"),
     admin = Depends(require_roles(RoleUtilisateur.admin_plateforme))
 ):
-    """
-    Restaure une sauvegarde depuis un fichier existant.
+    """Restaure une sauvegarde depuis un fichier existant.
     
     **Permissions :** Admin plateforme uniquement.
     
@@ -128,15 +125,15 @@ def restore_backup(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Confirmation requise. Veuillez passer confirm=true dans les paramètres de requête."
         )
-    
+
     backup_path = backup_manager.backup_dir / filename
-    
+
     if not backup_path.exists():
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Fichier de sauvegarde introuvable: {filename}"
         )
-    
+
     # Vérifier l'intégrité du fichier
     from app.core.backup import verify_backup
     if not verify_backup(backup_path):
@@ -144,7 +141,7 @@ def restore_backup(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Le fichier de sauvegarde semble corrompu."
         )
-    
+
     # Restaurer la sauvegarde
     success = backup_manager.restore_backup(backup_path)
     if not success:
@@ -152,7 +149,7 @@ def restore_backup(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Erreur lors de la restauration de la sauvegarde."
         )
-    
+
     return {
         "success": True,
         "message": f"Sauvegarde restaurée avec succès: {filename}",
@@ -167,8 +164,7 @@ def restore_backup(
 def get_metadata(
     admin = Depends(require_roles(RoleUtilisateur.admin_plateforme))
 ):
-    """
-    Récupère les métadonnées des sauvegardes.
+    """Récupère les métadonnées des sauvegardes.
     
     **Permissions :** Admin plateforme uniquement.
     
@@ -180,7 +176,7 @@ def get_metadata(
     - Taille totale des sauvegardes
     """
     metadata = export_metadata()
-    
+
     return {
         "success": True,
         "data": metadata
@@ -192,24 +188,23 @@ def delete_backup(
     filename: str,
     admin = Depends(require_roles(RoleUtilisateur.admin_plateforme))
 ):
-    """
-    Supprime une sauvegarde spécifique.
+    """Supprime une sauvegarde spécifique.
     
     **Permissions :** Admin plateforme uniquement.
     """
     backup_path = backup_manager.backup_dir / filename
-    
+
     if not backup_path.exists():
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Fichier de sauvegarde introuvable: {filename}"
         )
-    
+
     try:
         # Récupérer la taille avant suppression
         size_mb = round(backup_path.stat().st_size / (1024 * 1024), 2)
         backup_path.unlink()
-        
+
         return {
             "success": True,
             "message": f"Sauvegarde supprimée avec succès: {filename}",
@@ -230,8 +225,7 @@ def cleanup_backups(
     keep_count: int = Query(7, ge=1, le=30, description="Nombre de sauvegardes à conserver"),
     admin = Depends(require_roles(RoleUtilisateur.admin_plateforme))
 ):
-    """
-    Nettoie les anciennes sauvegardes en conservant les N plus récentes.
+    """Nettoie les anciennes sauvegardes en conservant les N plus récentes.
     
     **Permissions :** Admin plateforme uniquement.
     
@@ -240,7 +234,7 @@ def cleanup_backups(
     """
     try:
         backup_manager.cleanup_old_backups(keep_count=keep_count)
-        
+
         return {
             "success": True,
             "message": f"Nettoyage effectué. {keep_count} sauvegardes les plus récentes conservées.",

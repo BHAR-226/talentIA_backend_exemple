@@ -126,9 +126,11 @@ app.include_router(candidatures.router)
 
 # Routes Métriques & Export (optionnelles)
 from app.core.metrics import router as metrics_router
+
 app.include_router(metrics_router)
 
 from app.core.export import router as export_router
+
 app.include_router(export_router)
 
 # ============================================================================
@@ -138,15 +140,14 @@ app.include_router(export_router)
 @app.on_event("startup")
 async def startup_event():
     """Tâches exécutées au démarrage de l'application."""
-    
     # 1. Vérification de la configuration de sécurité
     _verifier_config_securite()
-    
+
     # 2. Démarrer la tâche de sauvegarde automatique en production
     if settings.environment == "production":
         asyncio.create_task(scheduled_backup())
         logger.info("✅ Tâche de sauvegarde automatique démarrée")
-    
+
     # 3. Vérifier Redis si activé
     if settings.redis_enabled:
         try:

@@ -1,5 +1,4 @@
-"""
-Services métier des candidatures.
+"""Services métier des candidatures.
 
 Toute la logique métier est centralisée ici :
 - création
@@ -10,15 +9,15 @@ Toute la logique métier est centralisée ici :
 """
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any
 from uuid import UUID
 
 from sqlalchemy.orm import Session
 
 from app.core.enums import StatutCandidature
 from app.core.validators import validate_custom_fields as core_validate_custom_fields
-from app.models.candidature import Candidature
 from app.models.candidat import Candidat
+from app.models.candidature import Candidature
 from app.models.offre import Offre
 
 logger = logging.getLogger("talentia.candidature_service")
@@ -28,9 +27,8 @@ logger = logging.getLogger("talentia.candidature_service")
 # Lecture
 # ==========================================================
 
-def get(db: Session, candidature_id: UUID) -> Optional[Candidature]:
-    """
-    Retourne une candidature par son identifiant.
+def get(db: Session, candidature_id: UUID) -> Candidature | None:
+    """Retourne une candidature par son identifiant.
     """
     return (
         db.query(Candidature)
@@ -42,9 +40,8 @@ def get(db: Session, candidature_id: UUID) -> Optional[Candidature]:
     )
 
 
-def get_with_relations(db: Session, candidature_id: UUID) -> Optional[Candidature]:
-    """
-    Retourne une candidature avec ses relations (offre, candidat).
+def get_with_relations(db: Session, candidature_id: UUID) -> Candidature | None:
+    """Retourne une candidature avec ses relations (offre, candidat).
     """
     return (
         db.query(Candidature)
@@ -59,12 +56,11 @@ def get_with_relations(db: Session, candidature_id: UUID) -> Optional[Candidatur
 def list_by_candidat(
     db: Session,
     candidat_id: UUID,
-    statut: Optional[StatutCandidature] = None,
-    limit: Optional[int] = None,
-    offset: Optional[int] = None,
-) -> List[Candidature]:
-    """
-    Retourne toutes les candidatures d'un candidat.
+    statut: StatutCandidature | None = None,
+    limit: int | None = None,
+    offset: int | None = None,
+) -> list[Candidature]:
+    """Retourne toutes les candidatures d'un candidat.
     
     Args:
         db: Session SQLAlchemy
@@ -77,29 +73,28 @@ def list_by_candidat(
         Candidature.candidat_id == candidat_id,
         Candidature.deleted_at.is_(None)
     )
-    
+
     if statut:
         query = query.filter(Candidature.statut == statut)
-    
+
     query = query.order_by(Candidature.date_soumission.desc())
-    
+
     if offset:
         query = query.offset(offset)
     if limit:
         query = query.limit(limit)
-    
+
     return query.all()
 
 
 def list_by_offre(
     db: Session,
     offre_id: UUID,
-    statut: Optional[StatutCandidature] = None,
-    limit: Optional[int] = None,
-    offset: Optional[int] = None,
-) -> List[Candidature]:
-    """
-    Retourne toutes les candidatures d'une offre.
+    statut: StatutCandidature | None = None,
+    limit: int | None = None,
+    offset: int | None = None,
+) -> list[Candidature]:
+    """Retourne toutes les candidatures d'une offre.
     
     Args:
         db: Session SQLAlchemy
@@ -112,17 +107,17 @@ def list_by_offre(
         Candidature.offre_id == offre_id,
         Candidature.deleted_at.is_(None)
     )
-    
+
     if statut:
         query = query.filter(Candidature.statut == statut)
-    
+
     query = query.order_by(Candidature.date_soumission.desc())
-    
+
     if offset:
         query = query.offset(offset)
     if limit:
         query = query.limit(limit)
-    
+
     return query.all()
 
 
@@ -155,11 +150,10 @@ def count_by_statut(db: Session, statut: StatutCandidature) -> int:
 # ==========================================================
 
 def validate_custom_fields(
-    answers: Dict[str, Any],
-    definitions: List[Dict[str, Any]],
+    answers: dict[str, Any],
+    definitions: list[dict[str, Any]],
 ) -> None:
-    """
-    Vérifie que les réponses du candidat respectent
+    """Vérifie que les réponses du candidat respectent
     les champs personnalisés définis sur l'offre.
 
     Args:
@@ -184,12 +178,11 @@ def create(
     *,
     offre: Offre,
     candidat_id: UUID,
-    lettre_motivation: Optional[str] = None,
-    cv_url: Optional[str] = None,
-    champs_personnalises: Optional[Dict[str, Any]] = None,
+    lettre_motivation: str | None = None,
+    cv_url: str | None = None,
+    champs_personnalises: dict[str, Any] | None = None,
 ) -> Candidature:
-    """
-    Crée une nouvelle candidature.
+    """Crée une nouvelle candidature.
 
     Args:
         db: Session SQLAlchemy
@@ -207,16 +200,16 @@ def create(
     """
     if champs_personnalises is None:
         champs_personnalises = {}
-    
+
     # Valider les champs personnalisés
     if offre.champs_personnalises_def:
         validate_custom_fields(champs_personnalises, offre.champs_personnalises_def)
-    
+
     # Vérifier que le candidat existe
     candidat = db.get(Candidat, candidat_id)
     if not candidat:
         raise ValueError(f"Candidat {candidat_id} non trouvé")
-    
+
     # Vérifier que le candidat n'a pas déjà postulé
     existing = (
         db.query(Candidature)
@@ -229,7 +222,7 @@ def create(
     )
     if existing:
         raise ValueError(f"Le candidat a déjà postulé à l'offre {offre.id}")
-    
+
     # Créer la candidature
     candidature = Candidature(
         offre_id=offre.id,
@@ -241,13 +234,13 @@ def create(
         score_global=None,
         evaluation_ia=None,
     )
-    
+
     db.add(candidature)
     db.commit()
     db.refresh(candidature)
-    
+
     logger.info(f"✅ Candidature créée: {candidature.id} pour l'offre {offre.id}")
-    
+
     return candidature
 
 
@@ -259,10 +252,9 @@ def update_statut(
     db: Session,
     candidature: Candidature,
     statut: StatutCandidature,
-    commentaire: Optional[str] = None,
+    commentaire: str | None = None,
 ) -> Candidature:
-    """
-    Met à jour le statut d'une candidature.
+    """Met à jour le statut d'une candidature.
 
     Args:
         db: Session SQLAlchemy
@@ -274,18 +266,18 @@ def update_statut(
         Candidature: La candidature mise à jour
     """
     ancien_statut = candidature.statut
-    
+
     # Utiliser la méthode du modèle
     candidature.changer_statut(statut, commentaire)
-    
+
     db.commit()
     db.refresh(candidature)
-    
+
     logger.info(
         f"🔄 Statut candidature {candidature.id} mis à jour: "
         f"{ancien_statut.value} → {statut.value}"
     )
-    
+
     return candidature
 
 
@@ -293,10 +285,9 @@ def update_evaluation_ia(
     db: Session,
     candidature: Candidature,
     score: int,
-    evaluation: Dict[str, Any],
+    evaluation: dict[str, Any],
 ) -> Candidature:
-    """
-    Met à jour l'évaluation IA d'une candidature.
+    """Met à jour l'évaluation IA d'une candidature.
 
     Args:
         db: Session SQLAlchemy
@@ -309,12 +300,12 @@ def update_evaluation_ia(
     """
     candidature.score_global = score
     candidature.evaluation_ia = evaluation
-    
+
     db.commit()
     db.refresh(candidature)
-    
+
     logger.info(f"🤖 Évaluation IA mise à jour pour {candidature.id}: score {score}")
-    
+
     return candidature
 
 
@@ -323,8 +314,7 @@ def update_commentaires(
     candidature: Candidature,
     commentaires: str,
 ) -> Candidature:
-    """
-    Met à jour les commentaires d'une candidature.
+    """Met à jour les commentaires d'une candidature.
 
     Args:
         db: Session SQLAlchemy
@@ -335,10 +325,10 @@ def update_commentaires(
         Candidature: La candidature mise à jour
     """
     candidature.commentaires = commentaires
-    
+
     db.commit()
     db.refresh(candidature)
-    
+
     return candidature
 
 
@@ -351,8 +341,7 @@ def delete(
     candidature: Candidature,
     user_id: UUID,
 ) -> bool:
-    """
-    Supprime logiquement une candidature.
+    """Supprime logiquement une candidature.
 
     Args:
         db: Session SQLAlchemy
@@ -364,9 +353,9 @@ def delete(
     """
     candidature.soft_delete(user_id)
     db.commit()
-    
+
     logger.info(f"🗑️ Candidature {candidature.id} supprimée par {user_id}")
-    
+
     return True
 
 
@@ -374,9 +363,8 @@ def delete(
 # Statistiques
 # ==========================================================
 
-def get_stats_by_offre(db: Session, offre_id: UUID) -> Dict[str, Any]:
-    """
-    Retourne les statistiques des candidatures pour une offre.
+def get_stats_by_offre(db: Session, offre_id: UUID) -> dict[str, Any]:
+    """Retourne les statistiques des candidatures pour une offre.
 
     Args:
         db: Session SQLAlchemy
@@ -386,20 +374,20 @@ def get_stats_by_offre(db: Session, offre_id: UUID) -> Dict[str, Any]:
         Dict: Statistiques (total, par statut, taux conversion)
     """
     candidatures = list_by_offre(db, offre_id)
-    
+
     total = len(candidatures)
-    
+
     # Statistiques par statut
     stats_par_statut = {}
     for statut in StatutCandidature:
         count = sum(1 for c in candidatures if c.statut == statut)
         if count > 0:
             stats_par_statut[statut.value] = count
-    
+
     # Taux de conversion
     embauches = stats_par_statut.get(StatutCandidature.embauche.value, 0)
     taux_conversion = round((embauches / total) * 100, 2) if total > 0 else 0
-    
+
     return {
         "total": total,
         "stats_par_statut": stats_par_statut,
@@ -408,9 +396,8 @@ def get_stats_by_offre(db: Session, offre_id: UUID) -> Dict[str, Any]:
     }
 
 
-def get_stats_by_candidat(db: Session, candidat_id: UUID) -> Dict[str, Any]:
-    """
-    Retourne les statistiques des candidatures pour un candidat.
+def get_stats_by_candidat(db: Session, candidat_id: UUID) -> dict[str, Any]:
+    """Retourne les statistiques des candidatures pour un candidat.
 
     Args:
         db: Session SQLAlchemy
@@ -420,16 +407,16 @@ def get_stats_by_candidat(db: Session, candidat_id: UUID) -> Dict[str, Any]:
         Dict: Statistiques (total, par statut)
     """
     candidatures = list_by_candidat(db, candidat_id)
-    
+
     total = len(candidatures)
-    
+
     # Statistiques par statut
     stats_par_statut = {}
     for statut in StatutCandidature:
         count = sum(1 for c in candidatures if c.statut == statut)
         if count > 0:
             stats_par_statut[statut.value] = count
-    
+
     return {
         "total": total,
         "stats_par_statut": stats_par_statut,
@@ -442,12 +429,11 @@ def get_stats_by_candidat(db: Session, candidat_id: UUID) -> Dict[str, Any]:
 
 def bulk_update_statut(
     db: Session,
-    candidature_ids: List[UUID],
+    candidature_ids: list[UUID],
     statut: StatutCandidature,
-    commentaire: Optional[str] = None,
+    commentaire: str | None = None,
 ) -> int:
-    """
-    Met à jour le statut de plusieurs candidatures.
+    """Met à jour le statut de plusieurs candidatures.
 
     Args:
         db: Session SQLAlchemy
@@ -466,14 +452,14 @@ def bulk_update_statut(
         )
         .all()
     )
-    
+
     count = 0
     for candidature in candidatures:
         candidature.changer_statut(statut, commentaire)
         count += 1
-    
+
     db.commit()
-    
+
     logger.info(f"🔄 {count} candidatures mises à jour en statut {statut.value}")
-    
+
     return count
