@@ -13,7 +13,7 @@ files = [
 ]
 
 [package.dependencies]
-Mako =  "*"
+Mako = "*"
 SQLAlchemy = ">=1.4.23"
 typing-extensions = ">=4.12"
 
