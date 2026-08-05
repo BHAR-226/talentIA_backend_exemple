@@ -120,8 +120,8 @@ def modifier_mon_profil(
     db: Session = Depends(get_db),
 ):
     """Édite son propre profil (nom, email, téléphone, fonction).
-    
-    **Restrictions :** 
+
+    **Restrictions :**
     - Ne peut pas modifier son rôle
     - Ne peut pas modifier son statut `actif`
     - Changer d'email redemande une vérification
@@ -172,7 +172,7 @@ def lister_utilisateurs(
     db: Session = Depends(get_db),
 ):
     """Liste tous les membres de l'équipe (entreprise de l'admin RH).
-    
+
     **Permissions :** Admin RH uniquement.
     """
     membres = (
@@ -194,10 +194,10 @@ def creer_utilisateur(
     db: Session = Depends(get_db),
 ):
     """Ajoute un membre à l'équipe (même entreprise que l'admin RH).
-    
+
     Le compte est `actif` immédiatement, mais un email de confirmation est
     envoyé : la connexion reste bloquée tant que l'email n'est pas vérifié.
-    
+
     **Permissions :** Admin RH uniquement.
     """
     # Vérifier le rôle
@@ -294,7 +294,7 @@ def get_utilisateur(
     db: Session = Depends(get_db),
 ):
     """Récupère un membre de l'équipe par son ID.
-    
+
     **Permissions :** Admin RH uniquement.
     """
     membre = _get_ou_404(db, admin.entreprise_id, user_id)
@@ -309,10 +309,10 @@ def update_utilisateur(
     db: Session = Depends(get_db),
 ):
     """Édite un membre de l'équipe (nom, email, rôle, activation).
-    
+
     C'est ICI qu'un admin RH approuve un recruteur resté en attente
     après son inscription sur une entreprise existante (`actif: true`).
-    
+
     **Permissions :** Admin RH uniquement.
     """
     membre = _get_ou_404(db, admin.entreprise_id, user_id)
@@ -383,10 +383,10 @@ def supprimer_utilisateur(
     db: Session = Depends(get_db),
 ):
     """Supprime un membre de l'équipe (soft delete).
-    
+
     Pour un simple départ ou une suspension temporaire, préférer
     `PUT /users/{id}` avec `actif: false`.
-    
+
     **Permissions :** Admin RH uniquement.
     """
     membre = _get_ou_404(db, admin.entreprise_id, user_id)
@@ -436,7 +436,7 @@ def promouvoir_admin_rh(
     db: Session = Depends(get_db),
 ):
     """Promeut un utilisateur au rôle Admin RH.
-    
+
     **Permissions :** Admin RH uniquement.
     """
     membre = _get_ou_404(db, admin.entreprise_id, user_id)
@@ -464,7 +464,7 @@ def promouvoir_recruteur(
     db: Session = Depends(get_db),
 ):
     """Promeut un utilisateur au rôle Recruteur.
-    
+
     **Permissions :** Admin RH uniquement.
     """
     membre = _get_ou_404(db, admin.entreprise_id, user_id)
@@ -485,7 +485,7 @@ def promouvoir_evaluateur(
     db: Session = Depends(get_db),
 ):
     """Promeut un utilisateur au rôle Évaluateur Technique.
-    
+
     **Permissions :** Admin RH uniquement.
     """
     membre = _get_ou_404(db, admin.entreprise_id, user_id)

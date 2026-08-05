@@ -115,7 +115,7 @@ def lister_offres(
     db: Session = Depends(get_db),
 ):
     """Liste toutes les offres de l'entreprise.
-    
+
     **Filtres disponibles :**
     - `statut` : Filtrer par statut (brouillon, publiee, archivee)
     - `campagne_id` : Filtrer par campagne
@@ -155,7 +155,7 @@ def creer_offre(
     db: Session = Depends(get_db),
 ):
     """Crée une nouvelle offre d'emploi.
-    
+
     **Permissions :** Recruteur ou Admin RH.
     """
     _check_recruteur_or_admin(user)
@@ -275,7 +275,7 @@ def update_offre(
     db: Session = Depends(get_db),
 ):
     """Met à jour une offre existante.
-    
+
     **Permissions :** Recruteur ou Admin RH.
     **Restriction :** Une offre publiée ou archivée ne peut être modifiée que par un admin RH.
     """
@@ -312,7 +312,7 @@ def publier_offre(
     db: Session = Depends(get_db),
 ):
     """Publie une offre (la rend visible aux candidats).
-    
+
     **Permissions :** Recruteur ou Admin RH.
     """
     _check_recruteur_or_admin(user)
@@ -343,7 +343,7 @@ def archiver_offre(
     db: Session = Depends(get_db),
 ):
     """Archive une offre.
-    
+
     **Permissions :** Recruteur ou Admin RH.
     """
     _check_recruteur_or_admin(user)
@@ -373,7 +373,7 @@ def toggle_reception_offre(
     db: Session = Depends(get_db),
 ):
     """Active ou désactive la réception des candidatures (bouton Arrêter/Rouvrir).
-    
+
     **Permissions :** Recruteur ou Admin RH.
     """
     _check_recruteur_or_admin(user)
@@ -401,7 +401,7 @@ def dupliquer_offre(
     db: Session = Depends(get_db),
 ):
     """Duplique une offre (crée une copie en brouillon).
-    
+
     **Permissions :** Recruteur ou Admin RH.
     """
     _check_recruteur_or_admin(user)
@@ -429,7 +429,7 @@ def delete_offre(
     db: Session = Depends(get_db),
 ):
     """Supprime une offre (uniquement si elle n'a pas de candidatures).
-    
+
     **Permissions :** Admin RH uniquement.
     """
     _check_admin_rh(user)
@@ -461,7 +461,7 @@ def stats_offre(
     db: Session = Depends(get_db),
 ):
     """Statistiques détaillées d'une offre.
-    
+
     **Statistiques retournées :**
     - Nombre total de candidatures
     - Nombre de candidatures par statut

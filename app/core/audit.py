@@ -3,17 +3,19 @@
 import uuid
 from typing import Any
 
+from fastapi import Request
 from sqlalchemy import Index, String
 from sqlalchemy.dialects.postgresql import JSONB, UUID
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, Session, mapped_column
 
 from app.core.database import Base
 from app.models.base import TimestampMixin, UUIDMixin
+from app.models.utilisateur import Utilisateur
 
 
 class AuditLog(UUIDMixin, TimestampMixin, Base):
     """Journal d'audit pour tracer toutes les modifications.
-    
+
     Enregistre toutes les actions CRUD effectuées sur les données
     sensibles de l'application avec les métadonnées associées.
     """

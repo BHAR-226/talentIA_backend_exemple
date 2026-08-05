@@ -99,7 +99,7 @@ def postuler(
     candidat: Candidat = Depends(get_current_candidat),
 ):
     """Postuler à une offre avec upload de CV.
-    
+
     **Champs :**
     - `offre_id` : ID de l'offre (requis)
     - `lettre_motivation` : Lettre de motivation (optionnel)
@@ -380,7 +380,7 @@ def update_statut_candidature(
     db: Session = Depends(get_db),
 ):
     """Met à jour le statut d'une candidature (pipeline Kanban).
-    
+
     **Permissions :** Recruteur ou Admin RH.
     """
     _check_recruteur_or_admin(user)
@@ -405,7 +405,7 @@ def update_candidature(
     db: Session = Depends(get_db),
 ):
     """Met à jour complète une candidature (statut, commentaires, évaluations).
-    
+
     **Permissions :** Recruteur ou Admin RH.
     """
     _check_recruteur_or_admin(user)
@@ -436,7 +436,7 @@ def bulk_update_statut(
     db: Session = Depends(get_db),
 ):
     """Met à jour le statut de plusieurs candidatures en une fois.
-    
+
     **Permissions :** Recruteur ou Admin RH.
     """
     _check_recruteur_or_admin(user)

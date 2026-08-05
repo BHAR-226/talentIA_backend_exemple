@@ -40,7 +40,7 @@ class TimestampMixin:
 
 class SoftDeleteMixin:
     """Mixin permettant la suppression logique (soft delete) des enregistrements.
-    
+
     Les enregistrements supprimés logiquement ne sont pas physiquement retirés
     de la base de données, mais marqués comme supprimés. Cela permet de :
     - Conserver l'historique des données
@@ -72,7 +72,7 @@ class SoftDeleteMixin:
 
     def soft_delete(self, user_id: uuid.UUID | None = None) -> None:
         """Marque l'enregistrement comme supprimé logiquement.
-        
+
         Args:
             user_id: ID de l'utilisateur effectuant la suppression (optionnel)
         """
@@ -88,7 +88,7 @@ class SoftDeleteMixin:
 
 class OptimisticLockMixin:
     """Mixin ajoutant un verrouillage optimiste pour éviter les mises à jour concurrentes.
-    
+
     Le champ `version` est incrémenté à chaque mise à jour. Si deux utilisateurs
     tentent de modifier le même enregistrement, le second verra une erreur de
     conflit (version mismatch).
@@ -107,10 +107,10 @@ class OptimisticLockMixin:
 
     def check_version(self, expected_version: int) -> bool:
         """Vérifie si la version correspond à celle attendue.
-        
+
         Args:
             expected_version: Version attendue
-            
+
         Returns:
             True si les versions correspondent, False sinon
         """

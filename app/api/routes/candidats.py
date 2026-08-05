@@ -33,7 +33,7 @@ router = APIRouter(prefix="/candidats", tags=["candidats"])
 @router.get("/me")
 def mon_profil(candidat: Candidat = Depends(get_current_candidat)):
     """Récupère le profil du candidat connecté.
-    
+
     **Accessible uniquement aux comptes candidat.**
     """
     return success(CandidatResponse.model_validate(candidat))
@@ -46,12 +46,12 @@ def modifier_mon_profil(
     db: Session = Depends(get_db),
 ):
     """Modifie le profil du candidat connecté.
-    
+
     **Champs modifiables :**
     - nom, téléphone, titre, expérience, localisation
     - LinkedIn, portfolio, disponibilité, préavis
     - Relocalisation, permis de conduire
-    
+
     **Restriction :** L'email ne peut pas être modifié ici.
     """
     for champ, valeur in payload.model_dump(exclude_unset=True).items():
@@ -72,7 +72,7 @@ def changer_mon_mot_de_passe(
     db: Session = Depends(get_db),
 ):
     """Change le mot de passe du candidat connecté.
-    
+
     **Nécessite :** L'ancien mot de passe pour confirmation.
     """
     if not candidat.mot_de_passe_hash or not verify_password(
@@ -99,7 +99,7 @@ async def uploader_cv(
     db: Session = Depends(get_db),
 ):
     """Ajoute ou remplace le CV du candidat connecté.
-    
+
     **Formats acceptés :** PDF, DOC, DOCX
     **Taille maximale :** 5 Mo (configurable)
     """
@@ -143,7 +143,7 @@ def obtenir_cv(
     candidat: Candidat = Depends(get_current_candidat),
 ):
     """Récupère l'URL du CV du candidat connecté.
-    
+
     **Retourne :** L'URL du CV ou `null` si aucun CV n'est uploadé.
     """
     return success({
@@ -179,7 +179,7 @@ def stats_candidat(
     db: Session = Depends(get_db),
 ):
     """Statistiques du candidat connecté.
-    
+
     **Statistiques retournées :**
     - Nombre total de candidatures
     - Nombre de candidatures par statut

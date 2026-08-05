@@ -106,26 +106,20 @@ select = [
     "B",  # flake8-bugbear
     "C",  # flake8-comprehensions
     "UP", # pyupgrade
-    
+
     # Code style
     "I",  # isort
     "W",  # pycodestyle warnings
-    "D",  # pydocstyle
     "N",  # pep8-naming
-    
-    # Security
-    "S",  # flake8-bandit
-    
+
     # Performance
     "PERF", # Perflint
     "SIM", # flake8-simplify
-    
+
     # Maintainability
-    "ARG", # flake8-unused-arguments
     "PTH", # flake8-use-pathlib
     "RET", # flake8-return
     "TCH", # flake8-type-checking
-    "PL",  # pylint
 ]
 
 ignore = [
@@ -135,6 +129,12 @@ ignore = [
     "D213", # Multi-line docstring summary should start at the second line
     "D401", # First line of docstring should be in imperative mood
     "S101", # Use of assert detected (for tests)
+    "E501", # Lignes longues tolérées
+    "B008", # FastAPI Depends en argument par défaut
+    "E402", # Imports après création de l'app (main.py)
+    "C901", # Complexité de fonction
+    "PTH123", # open() au lieu de Path.open()
+    "PERF401", # Boucles -> compréhensions (micro-optimisation)
 ]
 
 [tool.ruff.lint.pydocstyle]

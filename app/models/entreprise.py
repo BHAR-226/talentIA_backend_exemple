@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 
 class Entreprise(UUIDMixin, TimestampMixin, Base):
     """Modèle représentant une entreprise cliente (tenant).
-    
+
     L'entreprise est la racine de l'isolation multi-tenant. Toutes les données
     (utilisateurs, campagnes, offres, candidatures) sont scopées par entreprise.
     """
@@ -190,7 +190,7 @@ class Entreprise(UUIDMixin, TimestampMixin, Base):
 
     def suspendre(self, motif: str) -> None:
         """Suspend l'entreprise avec un motif.
-        
+
         Args:
             motif: Motif de la suspension
         """

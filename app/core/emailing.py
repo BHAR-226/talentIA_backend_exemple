@@ -109,14 +109,14 @@ def _envoyer(
     reply_to: str | None = None,
 ) -> bool:
     """Envoie un email avec les formats texte et HTML.
-    
+
     Args:
         destinataire: Adresse email du destinataire
         sujet: Sujet de l'email
         corps_texte: Version texte du message
         corps_html: Version HTML du message
         reply_to: Adresse de réponse (optionnel)
-        
+
     Returns:
         bool: True si l'email a été envoyé ou loggé avec succès
     """
@@ -176,12 +176,12 @@ def _envoyer(
 
 def envoyer_email_verification(destinataire: str, nom: str, token: str) -> bool:
     """Envoie le lien de confirmation d'adresse email à l'inscription.
-    
+
     Args:
         destinataire: Adresse email du destinataire
         nom: Nom du destinataire
         token: Jeton de vérification
-        
+
     Returns:
         bool: True si l'email a été envoyé avec succès
     """
@@ -210,11 +210,11 @@ def envoyer_email_verification(destinataire: str, nom: str, token: str) -> bool:
 
 def envoyer_email_bienvenue(destinataire: str, nom: str) -> bool:
     """Envoie un email de bienvenue après la vérification.
-    
+
     Args:
         destinataire: Adresse email du destinataire
         nom: Nom du destinataire
-        
+
     Returns:
         bool: True si l'email a été envoyé avec succès
     """
@@ -263,12 +263,12 @@ def envoyer_email_bienvenue(destinataire: str, nom: str) -> bool:
 
 def envoyer_email_reset_password(destinataire: str, nom: str, token: str) -> bool:
     """Envoie un email de réinitialisation de mot de passe.
-    
+
     Args:
         destinataire: Adresse email du destinataire
         nom: Nom du destinataire
         token: Jeton de réinitialisation
-        
+
     Returns:
         bool: True si l'email a été envoyé avec succès
     """
@@ -298,12 +298,12 @@ def envoyer_email_reset_password(destinataire: str, nom: str, token: str) -> boo
 
 def envoyer_email_offre_envoyee(destinataire: str, nom: str, offre_titre: str) -> bool:
     """Envoie une notification quand une offre est envoyée à un candidat.
-    
+
     Args:
         destinataire: Adresse email du destinataire
         nom: Nom du destinataire
         offre_titre: Titre de l'offre
-        
+
     Returns:
         bool: True si l'email a été envoyé avec succès
     """

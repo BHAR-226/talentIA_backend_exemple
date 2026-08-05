@@ -192,8 +192,7 @@ class ErrorHandlingMiddleware(BaseHTTPMiddleware):
 
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
         try:
-            response = await call_next(request)
-            return response
+            return await call_next(request)
         except Exception as e:
             # Log l'erreur avec le contexte
             logger.error(
@@ -248,7 +247,7 @@ class MetricsMiddleware(BaseHTTPMiddleware):
 
 class CompressionMiddleware(BaseHTTPMiddleware):
     """Middleware pour compresser les réponses (gzip).
-    
+
     NOTE: pour un usage en production, préférer `starlette.middleware.gzip.
     GZipMiddleware` (déjà testé, gère le streaming). Cette version est
     conservée pour compatibilité mais compresse réellement le corps (le
@@ -291,7 +290,7 @@ class CompressionMiddleware(BaseHTTPMiddleware):
 
 def setup_middlewares(app) -> None:
     """Configure tous les middlewares pour l'application.
-    
+
     Args:
         app: Instance FastAPI
     """

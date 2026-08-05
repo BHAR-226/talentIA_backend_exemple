@@ -89,10 +89,10 @@ PLAN_CATALOG: dict[PlanAbonnement, dict] = {
 
 def get_plan(plan: PlanAbonnement) -> dict | None:
     """Récupère les détails d'un plan.
-    
+
     Args:
         plan: Plan d'abonnement
-        
+
     Returns:
         Dict: Détails du plan ou None si inexistant
     """
@@ -101,10 +101,10 @@ def get_plan(plan: PlanAbonnement) -> dict | None:
 
 def get_plan_features(plan: PlanAbonnement) -> list[str]:
     """Récupère les fonctionnalités d'un plan.
-    
+
     Args:
         plan: Plan d'abonnement
-        
+
     Returns:
         List[str]: Liste des fonctionnalités
     """
@@ -114,10 +114,10 @@ def get_plan_features(plan: PlanAbonnement) -> list[str]:
 
 def get_plan_limits(plan: PlanAbonnement) -> dict:
     """Récupère les limites d'un plan.
-    
+
     Args:
         plan: Plan d'abonnement
-        
+
     Returns:
         Dict: Limites du plan
     """
@@ -127,11 +127,11 @@ def get_plan_limits(plan: PlanAbonnement) -> dict:
 
 def get_plan_price(plan: PlanAbonnement, annual: bool = False) -> str:
     """Récupère le prix d'un plan.
-    
+
     Args:
         plan: Plan d'abonnement
         annual: Prix annuel (défaut: False)
-        
+
     Returns:
         str: Prix formaté
     """
@@ -145,7 +145,7 @@ def get_plan_price(plan: PlanAbonnement, annual: bool = False) -> str:
 
 def get_all_plans() -> list[dict]:
     """Récupère tous les plans sous forme de liste.
-    
+
     Returns:
         List[Dict]: Liste de tous les plans avec leur clé
     """
@@ -157,7 +157,7 @@ def get_all_plans() -> list[dict]:
 
 def get_recommended_plan() -> PlanAbonnement | None:
     """Récupère le plan recommandé.
-    
+
     Returns:
         PlanAbonnement: Plan recommandé ou None
     """
@@ -169,11 +169,11 @@ def get_recommended_plan() -> PlanAbonnement | None:
 
 def get_plans_by_price_range(min_price: int, max_price: int) -> list[PlanAbonnement]:
     """Récupère les plans dans une fourchette de prix.
-    
+
     Args:
         min_price: Prix minimum
         max_price: Prix maximum
-        
+
     Returns:
         List[PlanAbonnement]: Plans correspondants
     """
@@ -191,10 +191,10 @@ def get_plans_by_price_range(min_price: int, max_price: int) -> list[PlanAbonnem
 
 def compare_plans(plans: list[PlanAbonnement]) -> dict:
     """Compare plusieurs plans.
-    
+
     Args:
         plans: Liste des plans à comparer
-        
+
     Returns:
         Dict: Comparaison des plans
     """
@@ -231,10 +231,10 @@ def compare_plans(plans: list[PlanAbonnement]) -> dict:
 
 def validate_plan(plan: PlanAbonnement) -> bool:
     """Valide qu'un plan existe dans le catalogue.
-    
+
     Args:
         plan: Plan à valider
-        
+
     Returns:
         bool: True si le plan existe
     """
@@ -243,10 +243,10 @@ def validate_plan(plan: PlanAbonnement) -> bool:
 
 def get_plan_limits_dict(plan: PlanAbonnement) -> dict:
     """Retourne les limites d'un plan sous forme de dictionnaire.
-    
+
     Args:
         plan: Plan d'abonnement
-        
+
     Returns:
         Dict: Limites avec valeurs par défaut
     """

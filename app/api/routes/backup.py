@@ -45,9 +45,9 @@ def list_backups(
     limit: int = Query(10, ge=1, le=100, description="Nombre maximum de sauvegardes à retourner")
 ):
     """Liste toutes les sauvegardes disponibles.
-    
+
     **Permissions :** Admin plateforme uniquement.
-    
+
     **Paramètres :**
     - `limit` : Nombre maximum de sauvegardes à retourner (défaut: 10, max: 100)
     """
@@ -77,9 +77,9 @@ def create_backup(
     admin = Depends(require_roles(RoleUtilisateur.admin_plateforme))
 ):
     """Crée une nouvelle sauvegarde manuelle de la base de données.
-    
+
     **Permissions :** Admin plateforme uniquement.
-    
+
     **⚠️ Attention :** La sauvegarde peut prendre quelques secondes
     selon la taille de la base de données.
     """
@@ -110,12 +110,12 @@ def restore_backup(
     admin = Depends(require_roles(RoleUtilisateur.admin_plateforme))
 ):
     """Restaure une sauvegarde depuis un fichier existant.
-    
+
     **Permissions :** Admin plateforme uniquement.
-    
+
     **⚠️ DANGER :** Cette opération écrase la base de données actuelle !
     Les données actuelles seront perdues.
-    
+
     **Paramètres :**
     - `confirm` : Doit être `true` pour confirmer la restauration
     """
@@ -165,9 +165,9 @@ def get_metadata(
     admin = Depends(require_roles(RoleUtilisateur.admin_plateforme))
 ):
     """Récupère les métadonnées des sauvegardes.
-    
+
     **Permissions :** Admin plateforme uniquement.
-    
+
     **Informations retournées :**
     - Nom de la base de données
     - Répertoire des sauvegardes
@@ -189,7 +189,7 @@ def delete_backup(
     admin = Depends(require_roles(RoleUtilisateur.admin_plateforme))
 ):
     """Supprime une sauvegarde spécifique.
-    
+
     **Permissions :** Admin plateforme uniquement.
     """
     backup_path = backup_manager.backup_dir / filename
@@ -226,9 +226,9 @@ def cleanup_backups(
     admin = Depends(require_roles(RoleUtilisateur.admin_plateforme))
 ):
     """Nettoie les anciennes sauvegardes en conservant les N plus récentes.
-    
+
     **Permissions :** Admin plateforme uniquement.
-    
+
     **Paramètres :**
     - `keep_count` : Nombre de sauvegardes à conserver (défaut: 7, max: 30)
     """

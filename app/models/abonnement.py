@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 
 class Abonnement(UUIDMixin, TimestampMixin, Base):
     """Modèle représentant l'abonnement SaaS d'une entreprise.
-    
+
     Un abonnement est associé à une seule entreprise et définit son plan,
     son statut et ses dates de validité.
     """
@@ -134,7 +134,7 @@ class Abonnement(UUIDMixin, TimestampMixin, Base):
 
     def renouveler(self, duree_jours: int = 30) -> None:
         """Renouvelle l'abonnement pour une durée donnée.
-        
+
         Args:
             duree_jours: Nombre de jours de renouvellement (défaut: 30)
         """
@@ -146,7 +146,7 @@ class Abonnement(UUIDMixin, TimestampMixin, Base):
 
     def prolonger(self, duree_jours: int = 30) -> None:
         """Prolonge l'abonnement existant d'une durée donnée.
-        
+
         Args:
             duree_jours: Nombre de jours à ajouter
         """
@@ -163,7 +163,7 @@ class Abonnement(UUIDMixin, TimestampMixin, Base):
 
     def mettre_en_essai(self, duree_jours: int = 30) -> None:
         """Met l'abonnement en période d'essai.
-        
+
         Args:
             duree_jours: Durée de l'essai en jours
         """

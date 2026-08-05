@@ -18,7 +18,7 @@ class DatabaseBackup:
 
     def __init__(self, backup_dir: str | None = None):
         """Initialise le gestionnaire de sauvegarde.
-        
+
         Args:
             backup_dir: Répertoire de sauvegarde (défaut: config)
         """
@@ -60,10 +60,10 @@ class DatabaseBackup:
 
     def create_backup(self, compress: bool | None = None) -> Path:
         """Crée une sauvegarde de la base de données.
-        
+
         Args:
             compress: Compresser la sauvegarde (défaut: config)
-            
+
         Returns:
             Path: Chemin vers le fichier de sauvegarde créé
         """
@@ -153,11 +153,11 @@ class DatabaseBackup:
 
     def restore_backup(self, backup_path: Path, confirm: bool = False) -> bool:
         """Restaure une sauvegarde.
-        
+
         Args:
             backup_path: Chemin vers le fichier de sauvegarde
             confirm: Confirmation explicite (défaut: False)
-            
+
         Returns:
             bool: True si la restauration a réussi
         """
@@ -220,10 +220,10 @@ class DatabaseBackup:
 
     def list_backups(self, limit: int | None = None) -> list[dict]:
         """Liste toutes les sauvegardes disponibles.
-        
+
         Args:
             limit: Nombre maximum de sauvegardes à retourner
-            
+
         Returns:
             list: Liste des sauvegardes
         """
@@ -245,10 +245,10 @@ class DatabaseBackup:
 
     def cleanup_old_backups(self, keep_count: int | None = None) -> int:
         """Supprime les anciennes sauvegardes, en gardant les plus récentes.
-        
+
         Args:
             keep_count: Nombre de sauvegardes à conserver (défaut: config)
-            
+
         Returns:
             int: Nombre de sauvegardes supprimées
         """

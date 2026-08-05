@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 
 class Candidat(UUIDMixin, TimestampMixin, SoftDeleteMixin, Base):
     """Modèle représentant un candidat indépendant de toute entreprise.
-    
+
     Un candidat peut postuler à plusieurs offres et n'est pas lié à une
     entreprise spécifique. Il peut avoir un compte (avec mot de passe) ou
     être créé de manière anonyme lors d'une candidature.
@@ -204,7 +204,7 @@ class Candidat(UUIDMixin, TimestampMixin, SoftDeleteMixin, Base):
 
     def upload_cv(self, url: str) -> None:
         """Met à jour l'URL du CV.
-        
+
         Args:
             url: Nouvelle URL du CV
         """

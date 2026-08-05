@@ -61,7 +61,7 @@ def list_by_candidat(
     offset: int | None = None,
 ) -> list[Candidature]:
     """Retourne toutes les candidatures d'un candidat.
-    
+
     Args:
         db: Session SQLAlchemy
         candidat_id: ID du candidat
@@ -95,7 +95,7 @@ def list_by_offre(
     offset: int | None = None,
 ) -> list[Candidature]:
     """Retourne toutes les candidatures d'une offre.
-    
+
     Args:
         db: Session SQLAlchemy
         offre_id: ID de l'offre

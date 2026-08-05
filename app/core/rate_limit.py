@@ -91,10 +91,10 @@ def _get_redis_keys(key: str) -> tuple[str, str]:
 
 def verifier_non_bloque(email: str) -> float | None:
     """Vérifie si un email est bloqué.
-    
+
     Args:
         email: Email à vérifier
-        
+
     Returns:
         Optional[float]: Secondes restantes si bloqué, None sinon
     """
@@ -125,10 +125,10 @@ def verifier_non_bloque(email: str) -> float | None:
 
 def enregistrer_echec(email: str) -> int:
     """Enregistre une tentative de connexion échouée.
-    
+
     Args:
         email: Email concerné
-        
+
     Returns:
         int: Nombre de tentatives après incrémentation
     """
@@ -189,10 +189,10 @@ def reinitialiser(email: str) -> None:
 
 def get_attempts(email: str) -> int:
     """Récupère le nombre de tentatives pour un email.
-    
+
     Args:
         email: Email concerné
-        
+
     Returns:
         int: Nombre de tentatives
     """
@@ -212,10 +212,10 @@ def get_attempts(email: str) -> int:
 
 def is_blocked(email: str) -> bool:
     """Vérifie si un email est bloqué.
-    
+
     Args:
         email: Email concerné
-        
+
     Returns:
         bool: True si bloqué
     """
@@ -225,10 +225,10 @@ def is_blocked(email: str) -> bool:
 
 def get_block_duration(email: str) -> int:
     """Récupère la durée de blocage restante en secondes.
-    
+
     Args:
         email: Email concerné
-        
+
     Returns:
         int: Secondes restantes (0 si non bloqué)
     """
@@ -238,10 +238,10 @@ def get_block_duration(email: str) -> int:
 
 def get_status(email: str) -> dict:
     """Retourne le statut complet du rate limiting pour un email.
-    
+
     Args:
         email: Email concerné
-        
+
     Returns:
         dict: Statut complet
     """
@@ -277,14 +277,13 @@ class RateLimitMiddleware:
         client_ip = request.client.host if request.client else "unknown"
 
         # Vérifier le rate limiting
-        if request.url.path.startswith(self.path_prefix):
-            if is_blocked(client_ip):
-                remaining = get_block_duration(client_ip)
-                from fastapi import HTTPException, status
-                raise HTTPException(
-                    status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-                    detail=f"Trop de requêtes. Réessayez dans {int(remaining // 60) + 1} minutes."
-                )
+        if request.url.path.startswith(self.path_prefix) and is_blocked(client_ip):
+            remaining = get_block_duration(client_ip)
+            from fastapi import HTTPException, status
+            raise HTTPException(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                detail=f"Trop de requêtes. Réessayez dans {int(remaining // 60) + 1} minutes."
+            )
 
         response = await call_next(request)
 
@@ -307,7 +306,7 @@ class RateLimitMiddleware:
 
 def rate_limit(max_attempts: int = 5, block_minutes: int = 15):
     """Décorateur pour appliquer le rate limiting sur une route spécifique.
-    
+
     Usage:
         @router.post("/login")
         @rate_limit(max_attempts=3, block_minutes=10)

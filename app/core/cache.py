@@ -17,7 +17,7 @@ except ImportError:
 
 class AsyncCache:
     """Cache asynchrone basé sur Redis.
-    
+
     Features:
     - Stockage de données avec TTL
     - Invalidation par pattern
@@ -27,7 +27,7 @@ class AsyncCache:
 
     def __init__(self, redis_url: str | None = None, default_ttl: int = 300):
         """Initialise le cache.
-        
+
         Args:
             redis_url: URL de connexion Redis (défaut: config)
             default_ttl: TTL par défaut en secondes (défaut: 300)
@@ -77,11 +77,11 @@ class AsyncCache:
 
     async def get(self, key: str, default: Any = None) -> Any | None:
         """Récupère une valeur du cache.
-        
+
         Args:
             key: Clé du cache
             default: Valeur par défaut si la clé n'existe pas
-            
+
         Returns:
             La valeur stockée ou la valeur par défaut
         """
@@ -116,13 +116,13 @@ class AsyncCache:
         compress: bool = False
     ) -> bool:
         """Stocke une valeur dans le cache.
-        
+
         Args:
             key: Clé du cache
             value: Valeur à stocker
             ttl: Durée de vie en secondes (défaut: default_ttl)
             compress: Compresser la valeur (défaut: False)
-            
+
         Returns:
             True si le stockage a réussi
         """
@@ -161,10 +161,10 @@ class AsyncCache:
 
     async def delete(self, key: str) -> bool:
         """Supprime une clé du cache.
-        
+
         Args:
             key: Clé à supprimer
-            
+
         Returns:
             True si la suppression a réussi
         """
@@ -185,10 +185,10 @@ class AsyncCache:
 
     async def invalidate_pattern(self, pattern: str) -> int:
         """Invalide toutes les clés correspondant à un pattern.
-        
+
         Args:
             pattern: Pattern de recherche (ex: "user:*")
-            
+
         Returns:
             Nombre de clés supprimées
         """
@@ -213,10 +213,10 @@ class AsyncCache:
 
     async def exists(self, key: str) -> bool:
         """Vérifie si une clé existe dans le cache.
-        
+
         Args:
             key: Clé à vérifier
-            
+
         Returns:
             True si la clé existe
         """
@@ -233,11 +233,11 @@ class AsyncCache:
 
     async def increment(self, key: str, amount: int = 1) -> int | None:
         """Incrémente une valeur numérique.
-        
+
         Args:
             key: Clé du compteur
             amount: Montant de l'incrémentation
-            
+
         Returns:
             La nouvelle valeur ou None en cas d'erreur
         """
@@ -255,7 +255,7 @@ class AsyncCache:
 
     async def clear(self) -> int:
         """Vide tout le cache.
-        
+
         Returns:
             Nombre de clés supprimées
         """
@@ -263,7 +263,7 @@ class AsyncCache:
 
     async def get_stats(self) -> dict:
         """Retourne les statistiques du cache.
-        
+
         Returns:
             Dictionnaire des statistiques
         """
@@ -295,16 +295,16 @@ cache = AsyncCache()
 
 def cache_key(prefix: str, *args, **kwargs) -> str:
     """Génère une clé de cache formatée.
-    
+
     Exemple:
         cache_key("user", id=123) -> "user:123"
         cache_key("stats", "admin", period="daily") -> "stats:admin:daily"
-    
+
     Args:
         prefix: Préfixe de la clé
         *args: Arguments positionnels
         **kwargs: Arguments nommés
-        
+
     Returns:
         Clé formatée
     """
@@ -331,17 +331,17 @@ async def cached(
     **kwargs
 ) -> Any:
     """Décorateur/utilitaire pour mettre en cache le résultat d'une fonction.
-    
+
     Usage:
         result = await cached("user:123", get_user, user_id=123)
-    
+
     Args:
         key: Clé du cache
         func: Fonction à appeler si le cache est vide
         ttl: TTL personnalisé
         *args: Arguments de la fonction
         **kwargs: Arguments nommés de la fonction
-        
+
     Returns:
         Le résultat de la fonction (caché ou non)
     """

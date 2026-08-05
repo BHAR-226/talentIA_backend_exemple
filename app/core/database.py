@@ -94,10 +94,10 @@ class Base(DeclarativeBase):
 
 def get_db() -> Generator[Session, None, None]:
     """Dépendance FastAPI pour obtenir une session de base de données.
-    
+
     Yields:
         Session: Une session SQLAlchemy pour la requête en cours.
-    
+
     Notes:
         La session est automatiquement fermée à la fin de la requête.
         Les transactions sont gérées automatiquement via le contexte.
@@ -120,16 +120,16 @@ def get_db() -> Generator[Session, None, None]:
 @contextmanager
 def transaction(db: Session) -> Generator[Session, None, None]:
     """Gestionnaire de transaction pour une session.
-    
+
     Usage:
         with transaction(db) as session:
             session.add(obj)
             # Commit automatique à la sortie
             # Rollback automatique en cas d'exception
-    
+
     Args:
         db: Session SQLAlchemy
-    
+
     Yields:
         Session: La session à utiliser
     """

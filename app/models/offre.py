@@ -20,7 +20,7 @@ if TYPE_CHECKING:
 
 class Offre(UUIDMixin, TimestampMixin, SoftDeleteMixin, Base):
     """Modèle représentant une offre d'emploi publiée dans une campagne.
-    
+
     Une offre est liée à une campagne et peut avoir plusieurs candidatures.
     Elle définit les critères du poste et les champs personnalisés pour
     le formulaire de candidature.
@@ -296,7 +296,7 @@ class Offre(UUIDMixin, TimestampMixin, SoftDeleteMixin, Base):
 
     def dupliquer(self) -> "Offre":
         """Crée une copie de l'offre en brouillon.
-        
+
         Returns:
             Offre: Nouvelle offre en brouillon
         """

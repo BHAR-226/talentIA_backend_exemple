@@ -28,7 +28,7 @@ async def stats_admin(
     db: Session = Depends(get_db),
 ):
     """Récupère les statistiques du tableau de bord admin.
-    
+
     **Données retournées :**
     - Nombre d'utilisateurs actifs
     - Nombre de recruteurs
@@ -38,7 +38,7 @@ async def stats_admin(
     - Taux de conversion (candidatures / offres)
     - Plan d'abonnement actuel
     - Statut de l'abonnement
-    
+
     **Permissions :** Admin RH ou Admin Plateforme uniquement.
     """
     # Vérifier les permissions
@@ -246,7 +246,7 @@ async def clear_admin_cache(
     user: Utilisateur = Depends(get_current_user),
 ):
     """Vide le cache des statistiques admin.
-    
+
     **Permissions :** Admin RH ou Admin Plateforme uniquement.
     """
     if user.role not in (RoleUtilisateur.admin_rh, RoleUtilisateur.admin_plateforme):
