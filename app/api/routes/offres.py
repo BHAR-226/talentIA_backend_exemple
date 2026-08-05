@@ -1,8 +1,10 @@
 """Routes API pour la gestion des Offres d'emploi (CDC §7)."""
 
 import uuid
+from datetime import UTC, datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user
@@ -191,12 +193,14 @@ def creer_offre(
         salaire_min=payload.salaire_min,
         salaire_max=payload.salaire_max,
         champs_personnalises_def=payload.champs_personnalises_def or [],
+        competences_requises=payload.competences_requises or [],
         missions=payload.missions or [],
         soft_skills=payload.soft_skills or [],
         avantages=payload.avantages or [],
         tele_travail=payload.tele_travail,
         visible=payload.visible,
         statut=StatutOffre.brouillon,
+        date_limite=payload.date_limite,
     )
 
     db.add(offre)
@@ -207,6 +211,49 @@ def creer_offre(
         OffreResponse.model_validate(offre),
         "Offre créée avec succès."
     )
+
+
+@router.get("/publiques")
+def lister_offres_publiques(
+    entreprise_id: uuid.UUID | None = Query(
+        None,
+        description="Scoper la liste aux offres d'une entreprise précise",
+    ),
+    db: Session = Depends(get_db),
+):
+    """Liste les offres visibles publiquement (vue candidat, P2.5).
+
+    **Filtres appliqués :** seules les offres encore accessibles aux
+    candidats sont renvoyées :
+    - `statut` == `publiee`
+    - `visible` == `true`
+    - `reception_ouverte` == `true`
+    - `date_limite` absente ou non dépassée
+    - campagne parente non supprimée (soft delete)
+
+    **Aucune authentification requise** (bord publique candidat).
+    """
+    query = (
+        db.query(Offre)
+        .join(Campagne)
+        .filter(
+            Campagne.deleted_at.is_(None),
+            Offre.deleted_at.is_(None),
+            Offre.statut == StatutOffre.publiee,
+            Offre.visible.is_(True),
+            Offre.reception_ouverte.is_(True),
+            or_(
+                Offre.date_limite.is_(None),
+                Offre.date_limite >= datetime.now(UTC),
+            ),
+        )
+    )
+
+    if entreprise_id is not None:
+        query = query.filter(Campagne.entreprise_id == entreprise_id)
+
+    offres = query.order_by(Offre.created_at.desc()).all()
+    return success([OffreResponse.model_validate(o) for o in offres])
 
 
 @router.get("/{offre_id}")

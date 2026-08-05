@@ -194,6 +194,12 @@ async def stats_admin(
     if candidatures_total > 0:
         taux_embauche = round((embauches / candidatures_total) * 100, 2)
 
+    # Nombre d'entretiens (RH + métier)
+    nombre_entretiens = (
+        candidatures_par_statut.get("entretien_rh", 0)
+        + candidatures_par_statut.get("entretien_metier", 0)
+    )
+
     # ==========================================================
     # Construction de la réponse
     # ==========================================================
@@ -220,6 +226,7 @@ async def stats_admin(
         taux_traitement=taux_traitement,
         taux_embauche=taux_embauche,
         embauches=embauches,
+        nombre_entretiens=nombre_entretiens,
 
         # Abonnement
         plan=abonnement.plan if abonnement else None,
