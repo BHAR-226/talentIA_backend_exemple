@@ -126,7 +126,7 @@ class PermissionChecker:
 
     def __init__(self, user: Utilisateur):
         """Initialise le vérificateur avec un utilisateur.
-        
+
         Args:
             user: Utilisateur à vérifier
         """
@@ -135,10 +135,10 @@ class PermissionChecker:
 
     def has_permission(self, permission: str) -> bool:
         """Vérifie si l'utilisateur a une permission spécifique.
-        
+
         Args:
             permission: Permission à vérifier (format: "resource:action")
-            
+
         Returns:
             bool: True si l'utilisateur a la permission
         """
@@ -150,12 +150,12 @@ class PermissionChecker:
 
     def can(self, resource: str, action: str, resource_id: uuid.UUID | None = None) -> bool:
         """Vérifie si l'utilisateur peut effectuer une action sur une ressource.
-        
+
         Args:
             resource: Type de ressource (offre, candidature, etc.)
             action: Action à effectuer (read, write, delete, etc.)
             resource_id: ID de la ressource (optionnel)
-            
+
         Returns:
             bool: True si l'utilisateur a la permission
         """
@@ -164,15 +164,15 @@ class PermissionChecker:
 
     def check(self, resource: str, action: str, resource_id: uuid.UUID | None = None) -> bool:
         """Vérifie la permission et lève une exception si refusée.
-        
+
         Args:
             resource: Type de ressource
             action: Action à effectuer
             resource_id: ID de la ressource (optionnel)
-            
+
         Returns:
             bool: True si autorisé
-            
+
         Raises:
             HTTPException: 403 si la permission est refusée
         """
@@ -185,10 +185,10 @@ class PermissionChecker:
 
     def check_permission(self, permission: str) -> bool:
         """Vérifie une permission spécifique.
-        
+
         Args:
             permission: Permission au format "resource:action"
-            
+
         Returns:
             bool: True si autorisé
         """
@@ -205,7 +205,7 @@ class PermissionChecker:
 
     def get_allowed_resources(self) -> dict[str, list[str]]:
         """Retourne les ressources et actions autorisées.
-        
+
         Returns:
             Dict: {resource: [actions]}
         """
@@ -225,13 +225,13 @@ class PermissionChecker:
 
 def require_permission(permission: str):
     """Décorateur pour vérifier une permission spécifique.
-    
+
     Usage:
         @router.post("/offres")
         @require_permission("offre:create")
         def create_offre(user: Utilisateur = Depends(get_current_user)):
             ...
-    
+
     Args:
         permission: Permission requise (format: "resource:action")
     """
@@ -273,13 +273,13 @@ def require_permission(permission: str):
 
 def require_permissions(resource: str, action: str):
     """Décorateur pour vérifier une permission sur une ressource.
-    
+
     Usage:
         @router.put("/offres/{offre_id}")
         @require_permissions("offre", "update")
         def update_offre(...):
             ...
-    
+
     Args:
         resource: Type de ressource
         action: Action à effectuer
@@ -359,11 +359,11 @@ def get_permission_description(permission: str) -> str:
 
 def has_permission(user: Utilisateur, permission: str) -> bool:
     """Fonction utilitaire pour vérifier une permission.
-    
+
     Args:
         user: Utilisateur à vérifier
         permission: Permission à vérifier
-        
+
     Returns:
         bool: True si l'utilisateur a la permission
     """
@@ -380,8 +380,7 @@ class PermissionMiddleware:
 
     async def __call__(self, request, call_next):
         # Le checker sera ajouté via une dépendance
-        response = await call_next(request)
-        return response
+        return await call_next(request)
 
 
 # ==========================================================
@@ -390,7 +389,7 @@ class PermissionMiddleware:
 
 def get_permission_checker(user: Utilisateur = Depends(get_current_user)) -> PermissionChecker:
     """Dépendance FastAPI pour obtenir un PermissionChecker.
-    
+
     Usage:
         @router.get("/admin")
         def admin_route(checker: PermissionChecker = Depends(get_permission_checker)):

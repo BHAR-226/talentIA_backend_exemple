@@ -20,7 +20,7 @@ if TYPE_CHECKING:
 
 class Offre(UUIDMixin, TimestampMixin, SoftDeleteMixin, Base):
     """Modèle représentant une offre d'emploi publiée dans une campagne.
-    
+
     Une offre est liée à une campagne et peut avoir plusieurs candidatures.
     Elle définit les critères du poste et les champs personnalisés pour
     le formulaire de candidature.
@@ -115,6 +115,12 @@ class Offre(UUIDMixin, TimestampMixin, SoftDeleteMixin, Base):
         comment="Date de publication de l'offre"
     )
 
+    date_limite: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+        comment="Date limite de réception des candidatures"
+    )
+
     # ==========================================================
     # Gestion des candidatures
     # ==========================================================
@@ -129,6 +135,13 @@ class Offre(UUIDMixin, TimestampMixin, SoftDeleteMixin, Base):
     # ==========================================================
     # Champs personnalisables
     # ==========================================================
+
+    competences_requises: Mapped[list[dict[str, Any]]] = mapped_column(
+        JSONB,
+        default=list,
+        nullable=False,
+        comment="Compétences requises pour le poste (libellé + obligatoire)"
+    )
 
     champs_personnalises_def: Mapped[list[dict[str, Any]]] = mapped_column(
         JSONB,
@@ -283,7 +296,7 @@ class Offre(UUIDMixin, TimestampMixin, SoftDeleteMixin, Base):
 
     def dupliquer(self) -> "Offre":
         """Crée une copie de l'offre en brouillon.
-        
+
         Returns:
             Offre: Nouvelle offre en brouillon
         """
@@ -300,11 +313,13 @@ class Offre(UUIDMixin, TimestampMixin, SoftDeleteMixin, Base):
             salaire_max=self.salaire_max,
             statut=StatutOffre.brouillon,
             champs_personnalises_def=deepcopy(self.champs_personnalises_def),
+            competences_requises=deepcopy(self.competences_requises),
             missions=self.missions.copy(),
             soft_skills=self.soft_skills.copy(),
             avantages=self.avantages.copy(),
             tele_travail=self.tele_travail,
             visible=self.visible,
+            date_limite=self.date_limite,
         )
 
     def __repr__(self) -> str:

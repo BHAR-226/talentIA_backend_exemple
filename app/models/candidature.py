@@ -25,7 +25,7 @@ if TYPE_CHECKING:
 
 class Candidature(UUIDMixin, TimestampMixin, SoftDeleteMixin, Base):
     """Modèle représentant une candidature à une offre d'emploi.
-    
+
     Une candidature est créée lorsqu'un candidat postule à une offre.
     Elle suit un pipeline de statuts définis par StatutCandidature.
     """
@@ -239,7 +239,7 @@ class Candidature(UUIDMixin, TimestampMixin, SoftDeleteMixin, Base):
 
     def changer_statut(self, nouveau_statut: StatutCandidature, commentaire: str | None = None) -> None:
         """Change le statut de la candidature.
-        
+
         Args:
             nouveau_statut: Nouveau statut à appliquer
             commentaire: Commentaire optionnel sur le changement
@@ -283,7 +283,7 @@ class Candidature(UUIDMixin, TimestampMixin, SoftDeleteMixin, Base):
 
     def update_evaluation_ia(self, score: int, evaluation: dict[str, Any]) -> None:
         """Met à jour l'évaluation IA de la candidature.
-        
+
         Args:
             score: Score global (0-100)
             evaluation: Détails de l'évaluation

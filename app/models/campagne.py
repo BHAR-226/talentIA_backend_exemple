@@ -20,7 +20,7 @@ if TYPE_CHECKING:
 
 class Campagne(UUIDMixin, TimestampMixin, SoftDeleteMixin, Base):
     """Modèle représentant une campagne de recrutement.
-    
+
     Une campagne regroupe plusieurs offres d'emploi et définit les critères
     généraux de recrutement (localisation, compétences, expérience, etc.).
     """

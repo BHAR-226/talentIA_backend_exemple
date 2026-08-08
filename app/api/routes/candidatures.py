@@ -3,6 +3,7 @@
 
 import json
 import uuid
+from datetime import UTC, datetime
 from pathlib import Path
 
 from fastapi import (
@@ -15,11 +16,12 @@ from fastapi import (
     UploadFile,
     status,
 )
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_candidat, get_current_user
 from app.core.database import get_db
-from app.core.enums import RoleUtilisateur
+from app.core.enums import RoleUtilisateur, StatutCandidature
 from app.core.plans import get_plan_limits
 from app.core.responses import success
 from app.core.validators import validate_custom_fields, validate_file_upload
@@ -97,7 +99,7 @@ def postuler(
     candidat: Candidat = Depends(get_current_candidat),
 ):
     """Postuler à une offre avec upload de CV.
-    
+
     **Champs :**
     - `offre_id` : ID de l'offre (requis)
     - `lettre_motivation` : Lettre de motivation (optionnel)
@@ -116,6 +118,12 @@ def postuler(
         raise HTTPException(
             status.HTTP_409_CONFLICT,
             "Cette offre n'accepte plus de candidatures."
+        )
+
+    if offre.date_limite is not None and datetime.now(UTC) > offre.date_limite:
+        raise HTTPException(
+            status.HTTP_409_CONFLICT,
+            "La date limite de candidature est dépassée."
         )
 
     if not offre.est_publiee:
@@ -194,13 +202,16 @@ def postuler(
     with open(file_path, "wb") as buffer:
         buffer.write(content)
 
+    # URL servie par le mount StaticFiles `/static/cv` (voir app/main.py)
+    cv_url = f"/static/cv/{filename}"
+
     # Créer la candidature
     candidature = Candidature(
         offre_id=offre_id,
         candidat_id=candidat.id,
         lettre_motivation=lettre_motivation,
         champs_personnalises=champs,
-        cv_url=str(file_path),
+        cv_url=cv_url,
     )
 
     db.add(candidature)
@@ -236,16 +247,52 @@ def mes_candidatures(
 # Lecture des candidatures (recruteur)
 # ==========================================================
 
-@router.get("/{candidature_id}")
-def get_candidature(
-    candidature_id: uuid.UUID,
+@router.get("")
+def lister_candidatures(
     user: Utilisateur = Depends(get_current_user),
+    statut: StatutCandidature | None = Query(None, description="Filtrer par statut"),
+    offre_id: uuid.UUID | None = Query(None, description="Filtrer par offre"),
+    search: str | None = Query(None, description="Recherche sur le nom/email du candidat"),
     db: Session = Depends(get_db),
 ):
-    """Récupère une candidature (accès recruteur/admin RH)."""
+    """Liste toutes les candidatures de l'entreprise (vue Kanban global).
+
+    **Filtres disponibles :**
+    - `statut` : Filtrer par statut de candidature
+    - `offre_id` : Filtrer par offre
+    - `search` : Recherche textuelle sur le nom ou l'email du candidat
+
+    **Permissions :** Recruteur ou Admin RH.
+    """
     _check_recruteur_or_admin(user)
-    candidature = _get_candidature_or_404(db, candidature_id, user.entreprise_id)
-    return success(CandidatureResponse.model_validate(candidature))
+
+    query = (
+        db.query(Candidature)
+        .join(Offre)
+        .join(Campagne)
+        .filter(
+            Campagne.entreprise_id == user.entreprise_id,
+            Campagne.deleted_at.is_(None),
+            Candidature.deleted_at.is_(None),
+        )
+    )
+
+    if statut:
+        query = query.filter(Candidature.statut == statut)
+
+    if offre_id:
+        query = query.filter(Candidature.offre_id == offre_id)
+
+    if search:
+        query = query.join(Candidat, Candidature.candidat_id == Candidat.id).filter(
+            or_(
+                Candidat.nom.ilike(f"%{search}%"),
+                Candidat.email.ilike(f"%{search}%"),
+            )
+        )
+
+    candidatures = query.order_by(Candidature.date_soumission.desc()).all()
+    return success([CandidatureResponse.model_validate(c) for c in candidatures])
 
 
 @router.get("/offre/{offre_id}")
@@ -309,6 +356,18 @@ def list_by_candidat(
     return success([CandidatureResponse.model_validate(c) for c in candidatures])
 
 
+@router.get("/{candidature_id}")
+def get_candidature(
+    candidature_id: uuid.UUID,
+    user: Utilisateur = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Récupère une candidature (accès recruteur/admin RH)."""
+    _check_recruteur_or_admin(user)
+    candidature = _get_candidature_or_404(db, candidature_id, user.entreprise_id)
+    return success(CandidatureResponse.model_validate(candidature))
+
+
 # ==========================================================
 # Mise à jour du statut
 # ==========================================================
@@ -321,7 +380,7 @@ def update_statut_candidature(
     db: Session = Depends(get_db),
 ):
     """Met à jour le statut d'une candidature (pipeline Kanban).
-    
+
     **Permissions :** Recruteur ou Admin RH.
     """
     _check_recruteur_or_admin(user)
@@ -346,7 +405,7 @@ def update_candidature(
     db: Session = Depends(get_db),
 ):
     """Met à jour complète une candidature (statut, commentaires, évaluations).
-    
+
     **Permissions :** Recruteur ou Admin RH.
     """
     _check_recruteur_or_admin(user)
@@ -377,7 +436,7 @@ def bulk_update_statut(
     db: Session = Depends(get_db),
 ):
     """Met à jour le statut de plusieurs candidatures en une fois.
-    
+
     **Permissions :** Recruteur ou Admin RH.
     """
     _check_recruteur_or_admin(user)

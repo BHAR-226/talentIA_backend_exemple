@@ -304,14 +304,14 @@ def get_all_enums() -> dict:
 
 def get_enum_choices(enum_class: Enum) -> list[dict]:
     """Retourne les choix d'une énumération sous forme de liste de dicts.
-    
+
     Exemple:
         get_enum_choices(RoleUtilisateur)
         # [{"value": "recruteur", "label": "Recruteur"}, ...]
-    
+
     Args:
         enum_class: Classe d'énumération
-        
+
     Returns:
         Liste des choix avec value et label
     """
@@ -323,10 +323,10 @@ def get_enum_choices(enum_class: Enum) -> list[dict]:
 
 def get_enum_labels(enum_class: Enum) -> dict:
     """Retourne un mapping valeur -> label pour une énumération.
-    
+
     Args:
         enum_class: Classe d'énumération
-        
+
     Returns:
         Dictionnaire {valeur: label}
     """

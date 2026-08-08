@@ -1,8 +1,10 @@
 """Routes API pour la gestion des Offres d'emploi (CDC §7)."""
 
 import uuid
+from datetime import UTC, datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user
@@ -113,7 +115,7 @@ def lister_offres(
     db: Session = Depends(get_db),
 ):
     """Liste toutes les offres de l'entreprise.
-    
+
     **Filtres disponibles :**
     - `statut` : Filtrer par statut (brouillon, publiee, archivee)
     - `campagne_id` : Filtrer par campagne
@@ -153,7 +155,7 @@ def creer_offre(
     db: Session = Depends(get_db),
 ):
     """Crée une nouvelle offre d'emploi.
-    
+
     **Permissions :** Recruteur ou Admin RH.
     """
     _check_recruteur_or_admin(user)
@@ -191,12 +193,14 @@ def creer_offre(
         salaire_min=payload.salaire_min,
         salaire_max=payload.salaire_max,
         champs_personnalises_def=payload.champs_personnalises_def or [],
+        competences_requises=payload.competences_requises or [],
         missions=payload.missions or [],
         soft_skills=payload.soft_skills or [],
         avantages=payload.avantages or [],
         tele_travail=payload.tele_travail,
         visible=payload.visible,
         statut=StatutOffre.brouillon,
+        date_limite=payload.date_limite,
     )
 
     db.add(offre)
@@ -207,6 +211,49 @@ def creer_offre(
         OffreResponse.model_validate(offre),
         "Offre créée avec succès."
     )
+
+
+@router.get("/publiques")
+def lister_offres_publiques(
+    entreprise_id: uuid.UUID | None = Query(
+        None,
+        description="Scoper la liste aux offres d'une entreprise précise",
+    ),
+    db: Session = Depends(get_db),
+):
+    """Liste les offres visibles publiquement (vue candidat, P2.5).
+
+    **Filtres appliqués :** seules les offres encore accessibles aux
+    candidats sont renvoyées :
+    - `statut` == `publiee`
+    - `visible` == `true`
+    - `reception_ouverte` == `true`
+    - `date_limite` absente ou non dépassée
+    - campagne parente non supprimée (soft delete)
+
+    **Aucune authentification requise** (bord publique candidat).
+    """
+    query = (
+        db.query(Offre)
+        .join(Campagne)
+        .filter(
+            Campagne.deleted_at.is_(None),
+            Offre.deleted_at.is_(None),
+            Offre.statut == StatutOffre.publiee,
+            Offre.visible.is_(True),
+            Offre.reception_ouverte.is_(True),
+            or_(
+                Offre.date_limite.is_(None),
+                Offre.date_limite >= datetime.now(UTC),
+            ),
+        )
+    )
+
+    if entreprise_id is not None:
+        query = query.filter(Campagne.entreprise_id == entreprise_id)
+
+    offres = query.order_by(Offre.created_at.desc()).all()
+    return success([OffreResponse.model_validate(o) for o in offres])
 
 
 @router.get("/{offre_id}")
@@ -228,7 +275,7 @@ def update_offre(
     db: Session = Depends(get_db),
 ):
     """Met à jour une offre existante.
-    
+
     **Permissions :** Recruteur ou Admin RH.
     **Restriction :** Une offre publiée ou archivée ne peut être modifiée que par un admin RH.
     """
@@ -265,7 +312,7 @@ def publier_offre(
     db: Session = Depends(get_db),
 ):
     """Publie une offre (la rend visible aux candidats).
-    
+
     **Permissions :** Recruteur ou Admin RH.
     """
     _check_recruteur_or_admin(user)
@@ -296,7 +343,7 @@ def archiver_offre(
     db: Session = Depends(get_db),
 ):
     """Archive une offre.
-    
+
     **Permissions :** Recruteur ou Admin RH.
     """
     _check_recruteur_or_admin(user)
@@ -326,7 +373,7 @@ def toggle_reception_offre(
     db: Session = Depends(get_db),
 ):
     """Active ou désactive la réception des candidatures (bouton Arrêter/Rouvrir).
-    
+
     **Permissions :** Recruteur ou Admin RH.
     """
     _check_recruteur_or_admin(user)
@@ -354,7 +401,7 @@ def dupliquer_offre(
     db: Session = Depends(get_db),
 ):
     """Duplique une offre (crée une copie en brouillon).
-    
+
     **Permissions :** Recruteur ou Admin RH.
     """
     _check_recruteur_or_admin(user)
@@ -382,7 +429,7 @@ def delete_offre(
     db: Session = Depends(get_db),
 ):
     """Supprime une offre (uniquement si elle n'a pas de candidatures).
-    
+
     **Permissions :** Admin RH uniquement.
     """
     _check_admin_rh(user)
@@ -414,7 +461,7 @@ def stats_offre(
     db: Session = Depends(get_db),
 ):
     """Statistiques détaillées d'une offre.
-    
+
     **Statistiques retournées :**
     - Nombre total de candidatures
     - Nombre de candidatures par statut

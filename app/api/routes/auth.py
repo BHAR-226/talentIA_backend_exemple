@@ -94,9 +94,9 @@ def register(
     db: Session = Depends(get_db)
 ):
     """Crée un nouveau compte (candidat ou recruteur) et envoie un email de confirmation.
-    
+
     **Candidat** : Compte créé immédiatement, email de vérification envoyé.
-    
+
     **Recruteur** :
     - Nouvelle entreprise → Devient admin RH, compte actif immédiatement
     - Entreprise existante → Devient recruteur, en attente de validation admin RH
@@ -232,7 +232,7 @@ def verify_email(
     db: Session = Depends(get_db)
 ):
     """Confirme l'adresse email depuis le lien envoyé à l'inscription.
-    
+
     Si le compte est utilisable (actif), la session est ouverte directement.
     Un recruteur en attente de validation admin reste bloqué.
     """
@@ -298,7 +298,7 @@ def resend_verification(
     db: Session = Depends(get_db)
 ):
     """Renvoie le lien de confirmation d'email.
-    
+
     Réponse volontairement identique que le compte existe ou non,
     pour ne pas révéler quels emails sont inscrits.
     """
@@ -330,7 +330,7 @@ def login(
     db: Session = Depends(get_db)
 ):
     """Connecte un utilisateur ou un candidat.
-    
+
     Vérifications :
     - Email vérifié
     - Compte actif
@@ -438,7 +438,7 @@ def me(
     db: Session = Depends(get_db),
 ):
     """Récupère l'identité de la session courante.
-    
+
     Recharge les données depuis la base pour avoir les informations à jour.
     """
     if identity.type == "utilisateur":

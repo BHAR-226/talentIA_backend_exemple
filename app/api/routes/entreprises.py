@@ -85,7 +85,7 @@ def get_mon_entreprise(
     db: Session = Depends(get_db),
 ):
     """Récupère l'entreprise (tenant) de l'utilisateur connecté.
-    
+
     **Accessible à tous les utilisateurs internes.**
     """
     if not user.entreprise_id:
@@ -104,7 +104,7 @@ def get_mon_entreprise_stats(
     db: Session = Depends(get_db),
 ):
     """Récupère les statistiques de l'entreprise de l'utilisateur connecté.
-    
+
     **Accessible à tous les utilisateurs internes.**
     """
     if not user.entreprise_id:
@@ -141,7 +141,7 @@ def lister_entreprises(
     db: Session = Depends(get_db),
 ):
     """Liste toutes les entreprises (réservé à l'admin plateforme).
-    
+
     **Filtres disponibles :**
     - `statut` : Filtrer par statut (active, suspendue)
     - `search` : Recherche textuelle dans le nom
@@ -192,7 +192,7 @@ def get_entreprise(
     db: Session = Depends(get_db),
 ):
     """Récupère une entreprise par son ID.
-    
+
     **Permissions :**
     - Admin plateforme : toutes les entreprises
     - Autres utilisateurs : seulement leur entreprise
@@ -210,7 +210,7 @@ def update_entreprise(
     db: Session = Depends(get_db),
 ):
     """Met à jour une entreprise.
-    
+
     **Permissions :**
     - Admin plateforme : toutes les entreprises
     - Admin RH : seulement son entreprise
@@ -242,7 +242,7 @@ def suspendre_entreprise(
     db: Session = Depends(get_db),
 ):
     """Suspend une entreprise (réservé à l'admin plateforme).
-    
+
     Coupe l'accès de TOUS les membres de l'entreprise dès la requête suivante.
     Réversible via `/reactiver`.
     """

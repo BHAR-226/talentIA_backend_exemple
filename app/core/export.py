@@ -22,11 +22,11 @@ def export_candidatures_to_csv(
     filename: str = "candidatures_export.csv"
 ) -> StreamingResponse:
     """Exporte les candidatures au format CSV avec BOM pour Excel.
-    
+
     Args:
         candidatures: Liste des candidatures à exporter
         filename: Nom du fichier de sortie
-        
+
     Returns:
         StreamingResponse: Réponse avec le fichier CSV
     """
@@ -86,11 +86,11 @@ def export_candidatures_to_excel(
     filename: str = "candidatures_export.xlsx"
 ) -> StreamingResponse:
     """Exporte les candidatures au format Excel (XLSX).
-    
+
     Args:
         candidatures: Liste des candidatures à exporter
         filename: Nom du fichier de sortie
-        
+
     Returns:
         StreamingResponse: Réponse avec le fichier Excel
     """
@@ -205,7 +205,7 @@ def export_candidatures(
     db: Session = Depends(get_db)
 ):
     """Exporte les candidatures au format CSV ou Excel.
-    
+
     **Filtres disponibles :**
     - `offre_id` : Filtrer par offre
     - `statut` : Filtrer par statut

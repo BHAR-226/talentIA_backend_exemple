@@ -21,8 +21,8 @@ if TYPE_CHECKING:
 
 class Utilisateur(UUIDMixin, TimestampMixin, SoftDeleteMixin, Base):
     """Modèle représentant un utilisateur interne d'une entreprise.
-    
-    Un utilisateur peut avoir différents rôles (recruteur, admin RH, 
+
+    Un utilisateur peut avoir différents rôles (recruteur, admin RH,
     évaluateur technique, admin plateforme) et est toujours rattaché
     à une entreprise.
     """
@@ -234,10 +234,10 @@ class Utilisateur(UUIDMixin, TimestampMixin, SoftDeleteMixin, Base):
 
     def est_superieur_a(self, autre: "Utilisateur") -> bool:
         """Vérifie si l'utilisateur a un rôle supérieur à un autre.
-        
+
         Args:
             autre: Autre utilisateur à comparer
-            
+
         Returns:
             True si l'utilisateur a un rôle supérieur ou égal
         """

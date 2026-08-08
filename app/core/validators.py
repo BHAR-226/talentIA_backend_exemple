@@ -32,15 +32,15 @@ def validate_email_domain(
     allow_empty: bool = False
 ) -> str:
     """Valide le domaine d'un email et bloque les domaines jetables.
-    
+
     Args:
         email: Adresse email à valider
         blocked_domains: Liste des domaines bloqués (optionnel)
         allow_empty: Permettre un email vide (défaut: False)
-        
+
     Returns:
         str: Email validé
-        
+
     Raises:
         ValueError: Si le domaine est bloqué
     """
@@ -66,10 +66,10 @@ def validate_email_domain(
 
 def validate_email_format(email: str) -> bool:
     """Vérifie le format d'un email avec une expression régulière.
-    
+
     Args:
         email: Adresse email à vérifier
-        
+
     Returns:
         bool: True si le format est valide
     """
@@ -83,13 +83,13 @@ def validate_email_format(email: str) -> bool:
 
 def validate_phone(phone: str) -> str:
     """Valide un numéro de téléphone.
-    
+
     Args:
         phone: Numéro de téléphone à valider
-        
+
     Returns:
         str: Numéro validé
-        
+
     Raises:
         ValueError: Si le format est invalide
     """
@@ -113,14 +113,14 @@ def validate_phone(phone: str) -> str:
 
 def validate_date(date_str: str, format: str = '%Y-%m-%d') -> datetime:
     """Valide une date au format spécifié.
-    
+
     Args:
         date_str: Chaîne de date à valider
         format: Format attendu (défaut: YYYY-MM-DD)
-        
+
     Returns:
         datetime: Date validée
-        
+
     Raises:
         ValueError: Si le format est invalide
     """
@@ -139,14 +139,14 @@ def validate_custom_fields(
     field_definitions: list[dict[str, Any]]
 ) -> dict[str, Any]:
     """Valide les réponses aux champs personnalisés d'une offre.
-    
+
     Args:
         values: Réponses du candidat
         field_definitions: Définitions des champs personnalisés
-        
+
     Returns:
         Dict: Valeurs validées
-        
+
     Raises:
         ValueError: Si une validation échoue
     """
@@ -177,7 +177,7 @@ def validate_custom_fields(
                 raise ValueError(f"'{field_name}' trop long (max {max_length} caractères)")
 
         elif field_type == 'nombre':
-            if not isinstance(value, (int, float)):
+            if not isinstance(value, int | float):
                 raise ValueError(f"'{field_name}' doit être un nombre")
             if min_value is not None and value < min_value:
                 raise ValueError(f"'{field_name}' doit être supérieur ou égal à {min_value}")
@@ -223,14 +223,14 @@ def validate_custom_fields(
 
 def validate_file_upload(filename: str, content: bytes) -> dict[str, Any]:
     """Valide un fichier uploadé (CV, etc.).
-    
+
     Args:
         filename: Nom du fichier
         content: Contenu du fichier en bytes
-        
+
     Returns:
         Dict: Informations sur le fichier validé (extension, mime_type, size)
-        
+
     Raises:
         ValueError: Si la validation échoue
     """
@@ -276,13 +276,13 @@ def validate_file_upload(filename: str, content: bytes) -> dict[str, Any]:
 
 def validate_url(url: str) -> str:
     """Valide une URL.
-    
+
     Args:
         url: URL à valider
-        
+
     Returns:
         str: URL validée
-        
+
     Raises:
         ValueError: Si l'URL est invalide
     """
@@ -302,14 +302,14 @@ def validate_url(url: str) -> str:
 
 def validate_password(password: str, min_length: int = 8) -> str:
     """Valide un mot de passe selon des critères de sécurité.
-    
+
     Args:
         password: Mot de passe à valider
         min_length: Longueur minimale (défaut: 8)
-        
+
     Returns:
         str: Mot de passe validé
-        
+
     Raises:
         ValueError: Si le mot de passe ne respecte pas les critères
     """
@@ -337,14 +337,14 @@ def validate_password(password: str, min_length: int = 8) -> str:
 
 def validate_postal_code(code: str, country: str = "FR") -> str:
     """Valide un code postal.
-    
+
     Args:
         code: Code postal à valider
         country: Pays (défaut: FR)
-        
+
     Returns:
         str: Code postal validé
-        
+
     Raises:
         ValueError: Si le code postal est invalide
     """

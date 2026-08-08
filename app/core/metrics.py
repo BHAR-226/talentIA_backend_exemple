@@ -150,8 +150,7 @@ def _normalize_path(path: str) -> str:
     # IDs numériques
     path = re.sub(r'/\d+', '/{id}', path)
     # Emails dans les URLs
-    path = re.sub(r'/[\w\.-]+@[\w\.-]+\.\w+', '/{email}', path)
-    return path
+    return re.sub(r'/[\w\.-]+@[\w\.-]+\.\w+', '/{email}', path)
 
 
 # ==========================================================
@@ -164,7 +163,7 @@ router = APIRouter(tags=["metrics"])
 @router.get("/metrics")
 def metrics():
     """Endpoint Prometheus pour récupérer les métriques.
-    
+
     **Usage:** Configurer Prometheus pour scraper cet endpoint.
     """
     return Response(generate_latest(), media_type="text/plain")
@@ -181,14 +180,14 @@ def update_active_users_metrics(db: Session) -> None:
 
     # Compter les candidats actifs
     candidats_actifs = db.query(Candidat).filter(
-        Candidat.email_verifie == True,
+        Candidat.email_verifie.is_(True),
         Candidat.deleted_at.is_(None)
     ).count()
 
     # Compter les utilisateurs internes actifs
     utilisateurs_actifs = db.query(Utilisateur).filter(
-        Utilisateur.actif == True,
-        Utilisateur.email_verifie == True,
+        Utilisateur.actif.is_(True),
+        Utilisateur.email_verifie.is_(True),
         Utilisateur.deleted_at.is_(None)
     ).count()
 
@@ -211,7 +210,7 @@ def update_db_pool_metrics(engine) -> None:
 
 def record_cache_metric(hit: bool, cache_type: str = "default") -> None:
     """Enregistre une métrique de cache.
-    
+
     Args:
         hit: True si le cache a été touché, False sinon
         cache_type: Type de cache (default, user, stats, etc.)
@@ -228,7 +227,7 @@ def record_cache_metric(hit: bool, cache_type: str = "default") -> None:
 
 def track_performance(name: str):
     """Décorateur pour suivre les performances d'une fonction.
-    
+
     Usage:
         @track_performance("user_service")
         def get_user(id):
@@ -280,9 +279,9 @@ def metrics_diagnostic():
     """Endpoint de diagnostic pour vérifier l'état des métriques."""
     return {
         "status": "ok",
-        "metrics_count": len([name for name in globals() if isinstance(globals()[name], (Counter, Histogram, Gauge))]),
+        "metrics_count": len([name for name in globals() if isinstance(globals()[name], Counter | Histogram | Gauge)]),
         "registered_metrics": [
             name for name in globals()
-            if isinstance(globals()[name], (Counter, Histogram, Gauge))
+            if isinstance(globals()[name], Counter | Histogram | Gauge)
         ]
     }

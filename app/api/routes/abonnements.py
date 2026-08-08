@@ -63,7 +63,7 @@ async def changer_plan(
     db: Session = Depends(get_db),
 ):
     """Change le plan d'abonnement (simulation, sans paiement).
-    
+
     Réservé à l'admin RH ou admin plateforme.
     """
     # Vérifier les permissions

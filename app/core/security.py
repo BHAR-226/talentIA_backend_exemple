@@ -23,10 +23,10 @@ ALGORITHM = "HS256"
 
 def hash_password(password: str) -> str:
     """Hache un mot de passe avec bcrypt.
-    
+
     Args:
         password: Mot de passe en clair
-        
+
     Returns:
         str: Mot de passe haché
     """
@@ -35,11 +35,11 @@ def hash_password(password: str) -> str:
 
 def verify_password(password: str, hashed: str) -> bool:
     """Vérifie un mot de passe par rapport à son hash.
-    
+
     Args:
         password: Mot de passe en clair
         hashed: Hash du mot de passe
-        
+
     Returns:
         bool: True si le mot de passe correspond
     """
@@ -51,17 +51,17 @@ def verify_password(password: str, hashed: str) -> bool:
 
 def is_password_strong(password: str) -> bool:
     """Vérifie si un mot de passe est assez fort.
-    
+
     Critères:
     - Au moins 8 caractères
     - Au moins une lettre majuscule
     - Au moins une lettre minuscule
     - Au moins un chiffre
     - Au moins un caractère spécial
-    
+
     Args:
         password: Mot de passe à vérifier
-        
+
     Returns:
         bool: True si le mot de passe est fort
     """
@@ -73,9 +73,7 @@ def is_password_strong(password: str) -> bool:
         return False
     if not any(c.isdigit() for c in password):
         return False
-    if not any(c in "!@#$%^&*()_+-=[]{}|;:,.<>?" for c in password):
-        return False
-    return True
+    return any(c in "!@#$%^&*()_+-=[]{}|;:,.<>?" for c in password)
 
 
 # ==========================================================
@@ -84,10 +82,10 @@ def is_password_strong(password: str) -> bool:
 
 def generate_secure_token(length: int = 32) -> str:
     """Génère un token sécurisé aléatoire.
-    
+
     Args:
         length: Longueur du token
-        
+
     Returns:
         str: Token sécurisé
     """
@@ -96,10 +94,10 @@ def generate_secure_token(length: int = 32) -> str:
 
 def generate_otp(length: int = 6) -> str:
     """Génère un code OTP numérique.
-    
+
     Args:
         length: Longueur du code
-        
+
     Returns:
         str: Code OTP
     """
@@ -159,13 +157,13 @@ def create_access_token(
 
 def decode_access_token(token: str) -> dict[str, Any]:
     """Décode/valide un JWT.
-    
+
     Args:
         token: JWT à décoder
-        
+
     Returns:
         dict: Payload décodé
-        
+
     Raises:
         jwt.PyJWTError: Si le token est invalide ou expiré
     """
@@ -174,13 +172,13 @@ def decode_access_token(token: str) -> dict[str, Any]:
 
 def refresh_access_token(token: str) -> str:
     """Rafraîchit un token d'accès.
-    
+
     Args:
         token: Ancien token à rafraîchir
-        
+
     Returns:
         str: Nouveau token
-        
+
     Raises:
         jwt.PyJWTError: Si le token est invalide
     """
@@ -199,10 +197,10 @@ def refresh_access_token(token: str) -> str:
 
 def get_token_expiration(token: str) -> datetime | None:
     """Récupère la date d'expiration d'un token.
-    
+
     Args:
         token: JWT à examiner
-        
+
     Returns:
         Optional[datetime]: Date d'expiration ou None
     """
@@ -223,10 +221,10 @@ def get_token_expiration(token: str) -> datetime | None:
 
 def is_token_expired(token: str) -> bool:
     """Vérifie si un token est expiré.
-    
+
     Args:
         token: JWT à vérifier
-        
+
     Returns:
         bool: True si le token est expiré
     """
@@ -268,13 +266,13 @@ def create_email_verification_token(subject: str, *, type_compte: str) -> str:
 
 def decode_email_verification_token(token: str) -> dict[str, Any]:
     """Décode un jeton de vérification d'email et vérifie qu'il a le bon usage.
-    
+
     Args:
         token: Jeton à décoder
-        
+
     Returns:
         dict: Payload décodé
-        
+
     Raises:
         jwt.InvalidTokenError: Si le jeton est invalide ou n'a pas le bon usage
     """
@@ -290,11 +288,11 @@ def decode_email_verification_token(token: str) -> dict[str, Any]:
 
 def create_password_reset_token(subject: str, *, type_compte: str) -> str:
     """Crée un jeton de réinitialisation de mot de passe.
-    
+
     Args:
         subject: ID du compte
         type_compte: Type de compte ("utilisateur" ou "candidat")
-        
+
     Returns:
         str: Jeton de réinitialisation
     """
@@ -313,13 +311,13 @@ def create_password_reset_token(subject: str, *, type_compte: str) -> str:
 
 def decode_password_reset_token(token: str) -> dict[str, Any]:
     """Décode un jeton de réinitialisation de mot de passe.
-    
+
     Args:
         token: Jeton à décoder
-        
+
     Returns:
         dict: Payload décodé
-        
+
     Raises:
         jwt.InvalidTokenError: Si le jeton est invalide ou n'a pas le bon usage
     """
@@ -335,11 +333,11 @@ def decode_password_reset_token(token: str) -> dict[str, Any]:
 
 def validate_token_type(token: str, expected_type: str) -> bool:
     """Vérifie le type d'un token.
-    
+
     Args:
         token: JWT à vérifier
         expected_type: Type attendu ("access", "verify_email", "reset_password")
-        
+
     Returns:
         bool: True si le token est du bon type
     """
@@ -360,10 +358,10 @@ def validate_token_type(token: str, expected_type: str) -> bool:
 
 def get_user_id_from_token(token: str) -> str | None:
     """Extrait l'ID utilisateur d'un token sans vérifier l'expiration.
-    
+
     Args:
         token: JWT à décoder
-        
+
     Returns:
         Optional[str]: ID utilisateur ou None
     """

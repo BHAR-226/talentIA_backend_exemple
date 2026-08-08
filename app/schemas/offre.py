@@ -47,10 +47,19 @@ class OffreBase(BaseModel):
         description="Indique si l'offre accepte encore des candidatures"
     )
 
+    date_limite: datetime | None = Field(
+        default=None,
+        description="Date limite de réception des candidatures"
+    )
+
     # Champs personnalisables
     champs_personnalises_def: list[dict[str, Any]] = Field(
         default_factory=list,
         description="Questions/champs personnalisés pour le formulaire de candidature"
+    )
+    competences_requises: list[dict[str, Any]] = Field(
+        default_factory=list,
+        description="Compétences requises pour le poste (libellé + obligatoire)"
     )
 
     # Champs additionnels
@@ -145,6 +154,9 @@ class OffreUpdate(BaseModel):
     champs_personnalises_def: list[dict[str, Any]] | None = Field(
         default=None
     )
+    competences_requises: list[dict[str, Any]] | None = Field(
+        default=None
+    )
     missions: list[str] | None = Field(
         default=None
     )
@@ -159,6 +171,9 @@ class OffreUpdate(BaseModel):
         max_length=50
     )
     visible: bool | None = Field(
+        default=None
+    )
+    date_limite: datetime | None = Field(
         default=None
     )
 

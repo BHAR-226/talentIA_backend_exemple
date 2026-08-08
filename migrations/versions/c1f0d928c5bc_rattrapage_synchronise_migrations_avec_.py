@@ -101,6 +101,7 @@ def upgrade() -> None:
         sa.Column(
             "renouvellement_auto",
             sa.Boolean(),
+            server_default=sa.text("false"),
             nullable=False,
             comment="Indique si l'abonnement se renouvelle automatiquement",
         ),
@@ -194,6 +195,7 @@ def upgrade() -> None:
         sa.Column(
             "recruteurs_responsables",
             postgresql.JSONB(astext_type=sa.Text()),
+            server_default=sa.text("'[]'::jsonb"),
             nullable=False,
             comment="Liste des IDs des recruteurs responsables",
         ),
@@ -209,6 +211,7 @@ def upgrade() -> None:
         sa.Column(
             "statut",
             sa.String(length=50),
+            server_default="active",
             nullable=False,
             comment="Statut de la campagne (active, terminee, annulee)",
         ),

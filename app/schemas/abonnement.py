@@ -57,6 +57,14 @@ class AdminStats(BaseModel):
     # Statistiques RH
     utilisateurs_actifs: int = Field(description="Nombre d'utilisateurs actifs")
     recruteurs: int = Field(description="Nombre de recruteurs")
+    admins_rh: int = Field(
+        default=0,
+        description="Nombre d'administrateurs RH"
+    )
+    evaluateurs: int = Field(
+        default=0,
+        description="Nombre d'évaluateurs techniques"
+    )
     offres_total: int = Field(description="Nombre total d'offres")
     candidatures_total: int = Field(description="Nombre total de candidatures")
 
@@ -64,6 +72,18 @@ class AdminStats(BaseModel):
     campagnes_actives: int | None = Field(
         default=0,
         description="Nombre de campagnes actives"
+    )
+    campagnes_terminees: int | None = Field(
+        default=0,
+        description="Nombre de campagnes terminées"
+    )
+    offres_publiees: int | None = Field(
+        default=0,
+        description="Nombre d'offres publiées"
+    )
+    offres_brouillon: int | None = Field(
+        default=0,
+        description="Nombre d'offres en brouillon"
     )
     taux_conversion: float | None = Field(
         default=None,
@@ -74,6 +94,28 @@ class AdminStats(BaseModel):
         description="Temps moyen de recrutement en jours"
     )
 
+    # KPIs recrutement (P2.8)
+    embauches: int = Field(
+        default=0,
+        description="Nombre de recrutements (candidatures embauchées)"
+    )
+    nombre_entretiens: int = Field(
+        default=0,
+        description="Nombre de candidatures au stade entretien (RH + métier)"
+    )
+    candidatures_par_statut: dict[str, int] = Field(
+        default_factory=dict,
+        description="Répartition des candidatures par statut"
+    )
+    taux_traitement: float | None = Field(
+        default=None,
+        description="Taux de candidatures traitées en pourcentage"
+    )
+    taux_embauche: float | None = Field(
+        default=None,
+        description="Taux d'embauche en pourcentage"
+    )
+
     # Abonnement
     plan: PlanAbonnement | None = Field(
         default=None,
@@ -82,4 +124,12 @@ class AdminStats(BaseModel):
     statut_abonnement: StatutAbonnement | None = Field(
         default=None,
         description="Statut de l'abonnement"
+    )
+    jours_restants: int | None = Field(
+        default=None,
+        description="Nombre de jours restants avant expiration"
+    )
+    est_expire: bool | None = Field(
+        default=None,
+        description="Indique si l'abonnement est expiré"
     )

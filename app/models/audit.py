@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 
 class AuditLog(UUIDMixin, TimestampMixin, Base):
     """Journal d'audit pour tracer toutes les modifications.
-    
+
     Enregistre toutes les actions CRUD effectuées sur les données
     sensibles de l'application avec les métadonnées associées.
     """
